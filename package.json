@@ -1,0 +1,17 @@
+{
+  "name": "智慧商圈",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "dependencies": {
+    "crypto-js": "^4.0.0",
+    "jsencrypt": "^3.0.0-rc.1",
+    "lrz": "^4.9.40",
+    "rsvp": "^4.8.5",
+    "weixin-js-sdk": "^1.4.0-test"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
