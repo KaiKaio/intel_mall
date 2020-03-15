@@ -63,7 +63,6 @@ const zhsq = {
 			let length = 0
 			for(let i = 0; i < state.shopCartList.length; i++) {
 				length += (state.shopCartList[i].kw1 * 1)
-				console.log(length, '1')
 			}
 			return length
 		},

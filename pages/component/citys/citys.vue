@@ -1,7 +1,6 @@
 <template>
 	<!-- 选择城市页面 -->
 	<view>
-		<top-placeholder />
 		<search-bar :isFull="true"></search-bar>
 		<!-- <view class="choose-locat">
 			<span>定位：</span>
@@ -21,11 +20,7 @@
 </template>
 
 <script>
-	import topPlaceholder from '@/components/top-placeholder.vue';
 	export default {
-		components: {
-			topPlaceholder
-		},
 		data() {
 			return {
 				town: [

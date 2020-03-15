@@ -272,7 +272,6 @@ export default {
 		},
 		
 		swiperLoad(index) {
-			console.log(index)
 			this.imgTop[index].showFlag = true
 		},
 		

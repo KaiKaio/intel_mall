@@ -5,10 +5,6 @@ import App from './App';
 import common, { user_msg } from './static/js/common.js';
 // import common, { user_msg } from './static/js/common-new.js';
 
-import listShop from './components/listShop.vue';
-import listHotel from './components/listHotel.vue';
-import listCate from './components/listCate.vue';
-import listPlay from './components/listPlay.vue';
 import locat from './components/locat.vue';
 import searchBar from './components/search-bar.vue'
 
@@ -64,10 +60,6 @@ Vue.prototype.$PAYSUCCMSG = []
 //用户信息
 global.$userDetail = {};
 
-Vue.component('list-shop', listShop);
-Vue.component('list-hotel', listHotel);
-Vue.component('list-cate', listCate);
-Vue.component('list-play', listPlay);
 Vue.component('search-bar', searchBar);
 Vue.component('locat', locat);
 

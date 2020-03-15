@@ -39,12 +39,10 @@
 </template>
 
 <script>
-	import topPlaceholder from "@/components/top-placeholder.vue"
 	import uniNumberBox from "@/components/uni-number-box/uni-number-box.vue"
 	import uniPopup from "@/components/uni-popup/uni-popup.vue"
 	export default {
 		components: {
-			topPlaceholder,
 			uniNumberBox,
 			uniPopup
 		},

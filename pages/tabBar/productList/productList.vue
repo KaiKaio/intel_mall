@@ -1,8 +1,6 @@
 <template>
 	<!-- 产品列表页的容器 -->
 	<view class="product-list">
-		<top-placeholder />
-		<!-- 顶部占位符 -->
 		
 		<shop-cart-btn />
 		
@@ -109,14 +107,12 @@
 <script>
 	import { mapGetters, mapActions } from 'vuex';
 	
-	import topPlaceholder from "@/components/top-placeholder.vue"
 	import shopCartBtn from '@/components/shop-cart-btn.vue'
 	import shopCartModel from '@/components/shop-cart-model.vue'
 	
 	
 	export default {
 		components: {
-			topPlaceholder,
 			shopCartBtn,
 			shopCartModel
 		},

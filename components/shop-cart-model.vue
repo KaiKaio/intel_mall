@@ -44,14 +44,12 @@
 <script>
 	import { mapState, mapGetters, mapActions } from 'vuex';
 	
-	import topPlaceholder from "@/components/top-placeholder.vue"
 	import uniNumberBox from "@/components/uni-number-box/uni-number-box.vue"
 	import uniPopup from "@/components/uni-popup/uni-popup.vue"
 	export default {
 		name: 'shopCartModel',
 		
 		components: {
-			topPlaceholder,
 			uniNumberBox,
 			uniPopup
 		},
