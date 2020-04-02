@@ -156,7 +156,7 @@
     // 	// "domain" : "https://mstest.nkshuju.com" //清溪测试
     // }
     "h5" : {
-        "title" : "智慧商圈",
+        "title" : "定位中...",
         "router" : {
             "base" : "/hdsh/zhsq/" //正式
         },

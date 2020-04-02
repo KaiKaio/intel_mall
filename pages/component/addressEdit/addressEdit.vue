@@ -52,7 +52,8 @@
 <script>
 	// import city from '@/static/js/city.js';
 	import {
-		mapGetters
+		mapGetters,
+		mapState
 	} from 'vuex'
 	export default {
 		data() {
@@ -92,7 +93,11 @@
 			};
 		},
 		computed: {
-			...mapGetters(['get_address_data'])
+			...mapGetters(['get_address_data']),
+			
+			...mapState({
+			    unit_data: state => state.zhsq.unit_data
+			})
 		},
 		onLoad(obj) {
 			this.index = obj.m;
@@ -137,10 +142,12 @@
 					appid: this.$DEVELOPER.szblid,
 					rpflag: this.$DEVELOPER.cid,
 					// areacode: this.$areaMsg.id,
+					// name: '五源河周边配送',
 					fid: '0',
 					labelid: '1006006',
 					pnum: 1,
-					psize: 99
+					psize: 99,
+					unit: this.unit_data.id
 				}).then(res => {
 					return this.$base.szblGet('/api/templates', {
 						m: this.$userMsg.userid,
@@ -299,7 +306,8 @@
 					"areaname": this.houseArea.name, // 小区名称
 					"areadetail": this.houseArea.address, // 小区详细地址
 					"isDefault": this.YData.cs,
-					"address": this.shMSg.detail
+					"address": this.shMSg.detail,
+					"unit": this.unit_data.id
 				}
 				
 				
@@ -326,7 +334,7 @@
 					'&tk=' + this.$userMsg.token + 
 					'&state=' + this.$base.getState(), {
 						"id": this.$userMsg.userid,
-						"address": this.address_list,
+						"address": this.address_list
 					}).then((res) => {
 						
 					uni.showToast({

@@ -3,7 +3,7 @@
 	<view>
 		<view class="type-cont" style="box-shadow: 2upx 20upx 40upx #eee;">
 			<view class="flex-cont order-tab">
-				<view 
+				<view
 					class="item" 
 					v-for="(x,index) in actType" 
 					:key="index" 
@@ -71,32 +71,33 @@
 				<p v-if="oItem.gid != 9" class="currency-head">实付<span>:</span>¥</p>
 			</view>
 			
-			<view class="button-block" v-if="oItem.status==0">
+			<view class="button-block" style="display: flex; justify-content: flex-end;" v-if="oItem.status == 1">
 				<view class="orders-button">
-					<a class="go-pay color-white bg-hdsh" @click="goPay(oItem, oIndex)">立即付款</a>
-					<a class="cancel" @click="orderDel(oItem,oIndex)">取消订单</a>
+					<a class="go-pay color-white bg-hdsh" @click="confirmDelivery(oItem, oIndex)">确认发货</a>
+				</view>
+				
+				<view class="orders-button">
+					<a class="go-pay" @click="refundOrder(oItem, oIndex)">退款</a>
 				</view>
 			</view>
 			
 			<view class="button-block" v-if="oItem.status == 2">
 				<view class="orders-button">
-					
-					<a class="go-pay color-white bg-hdsh" v-if="oItem.status==2" @click="clickOk(oItem,oIndex)">确认收货</a>
-					
-					<a class="cancel wl" v-if="oItem.status == 2" @click.stop="wlClick(oIndex)">物流信息
-						<view class="wl-msg-box" v-if="oIndex===windex">
-							<p>物流公司：{{oItem.delivery}}</p>
-							<p>物流编号：{{oItem.delivery_id}}</p>
+					<a class="cancel wl" @click.stop="wlClick(oIndex)">配送信息
+						<view class="wl-msg-box" v-if="oIndex === windex">
+							<p>配送员电话：{{oItem.jsondata.psydh}}</p>
+							<p>配送员姓名：{{oItem.jsondata.psyxm}}</p>
 						</view>
 					</a>
 				</view>
 			</view>
 			
-			<view class="button-block" v-if="oItem.gid == 7 && (oItem.status==4 || oItem.status==1)">
+			<view class="button-block" v-if="oItem.gid == 7 && (oItem.status == 4 || oItem.status == 1)">
 				<view class="orders-button">
 					<a class="cancel" @click="sqClick(oItem,oIndex)">申请退款</a>
 				</view>
 			</view>
+			
 			<view class="button-block" v-if="oItem.status==6">
 				<view class="orders-button">
 					<a class="go-pay color-white bg-hdsh" @click="toComment(oItem)">立即评价</a>
@@ -107,13 +108,79 @@
 		<view class="bottom-hint" v-show="loginFlag === true">
 			{{b_hint}}
 		</view>
+		
+		<uni-popup class="sku-list" ref="delivery_pop" type="center">
+			<view style="display: flex;">
+				<view @click="peisongTab = 0" :style="{'backgroundColor': peisongTab === 0 ? 'rgb(235, 84, 77)' : '', 'color': peisongTab === 0 ? '#fff' : ''}" style="width: 50%; text-align:center; color: #000; font-size: 30upx; margin-bottom: 20upx;">配送员</view>
+				<view @click="peisongTab = 1" :style="{'backgroundColor': peisongTab === 1 ? 'rgb(235, 84, 77)' : '', 'color': peisongTab === 1 ? '#fff' : ''}" style="width: 50%; text-align:center; color: #000; font-size: 30upx; margin-bottom: 20upx;">本店配送</view>
+			</view>
+			
+			
+			
+			<ul class="list" v-if="peisongTab === 0" style="height: 70vh;">
+				<template v-for="(item, index) in personList" >
+					<li class="list-item" :key="item.id" style="justify-content: space-between; align-items: center; display: flex; font-size: 24upx; margin-bottom: 20upx; box-shadow: 0px 0px 2u0px #eee; padding: 24upx 8upx;">
+							
+						<view style="border-radius: 4%; margin-right: 8upx; width: 120upx; height: 120upx; background-repeat: no-repeat; background-size: contain;" v-if="item.kw16.indexOf('http') === 0" class="avatar" :style="{ backgroundImage: `url(${ item.kw16 })` }"></view>
+						<view style="border-radius: 4%; margin-right: 8upx; width: 120upx; height: 120upx; background-repeat: no-repeat; background-size: contain;" v-else class="avatar" :style="{ backgroundImage: `url(${ $base.urlPrex + item.kw16 })` }"></view>
+						
+						<view class="person-info" style="width: 50%; line-height: 40upx;">
+							<view>
+								<text>手机号：{{ item.kw1 }}</text>
+							</view>
+							
+							<view>
+								<text>真实姓名：{{ item.kw0 }}</text>
+							</view>
+							
+							<view style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+								<text>昵称：{{ item.kw12 }}</text>
+							</view>
+							
+							<view>
+								<text v-if="item.kw3 !== '' ">性别：{{ item.kw3 }}</text>
+								<text v-else>性别：暂无</text>
+							</view>
+						</view>
+						
+						
+						
+						<view class="button-wrapper" style="background-color: #EB544D;
+							border-radius: 6px;
+							color: #fff;
+							padding: 1px 2px;">
+							<view @click="handleDelive(item, index)" class="function-botton">安排配送</view>
+						</view>
+					</li>
+				</template>
+			</ul>
+			
+			<view v-if="peisongTab === 1">
+				<view style="margin-bottom: 24upx;">本店配送将使用当前登录的账号信息</view>
+				<view>姓名：{{ shopInfo.kw0 ? shopInfo.kw0 : '暂无' }}</view>
+				<view style="margin-bottom: 24upx;">手机号：{{ shopInfo.kw1 }}</view>
+				
+				<view class="button-wrapper" 
+					style="background-color: #EB544D;
+					text-align: center;
+					width: 30%;
+					margin-left: auto;
+					border-radius: 6px;
+					color: #fff;
+					padding: 1px 2px;">
+					<view @click="selfDelive" class="function-botton">配送</view>
+				</view>
+			</view>
+		</uni-popup>
+		
+		
 	</view>
 </template>
 
 <script>
 	import { mapState } from 'vuex';
-	
 	export default {
+		name: 'orderList',
 		data() {
 			return {
 				order_list: [],
@@ -151,21 +218,23 @@
 				page_num: 0, //当前页数
 				pnum: 1,
 				
-				loginFlag: false
+				loginFlag: false,
+				
+				searchPhone: '',
+				personList: [],
+				
+				selOrderItem: {}, // 发货选中的订单
+				
+				peisongTab: 0,
 			};
 		},
-		
 		computed: {
 			...mapState({
 			    unit_data: state => state.zhsq.unit_data
-			}),
+			})
 		},
 		
-		onLoad(obj) {
-			
-		},
-		onShow() {
-			
+		mounted () {
 			if (this.$userMsg.userid === null) { // 判断是否已登录
 				this.loginFlag = false
 			} else {
@@ -185,8 +254,14 @@
 			
 			let status = this.actType[this.actTypeIndex].status
 			
-			uni.setNavigationBarTitle({
-				title: this.unit_data.name
+			
+			// 获取个人信息，用于个人配送
+			this.$base.szblGet("/api/user/" + this.$userMsg.userid, {
+				m: this.$userMsg.userid,
+				tk: this.$userMsg.token,
+				state: this.$base.getState(),
+			}).then((res) => {
+				this.shopInfo = this.$base.strResToJson(res.data);
 			})
 		},
 		onReachBottom() {
@@ -195,16 +270,189 @@
 			// 上拉加载
 			this.pnum++;
 			if (this.pnum > this.page_num) {
-				uni.showToast({
-					title: '到底啦',
-					icon: 'none'
-				})
 				return
 			} else {
 				this.getList(status, true)
 			}
 		},
 		methods: {
+			// 退款
+			refundOrder(item, index) {
+				uni.showModal({
+					content: `确认将此订单的金额退款吗？`,
+					showCancel: true,
+					confirmColor: this.$PROP.hdsh_color,
+					success: res => {
+						if (res.confirm) {
+							this.$base.wxPayRefund(
+								this.$userMsg.userid,
+								this.$userMsg.token,
+								this.$DEVELOPER.wxPayMarkPUBLIC,
+								item.kw2
+							).then(res => {
+								return this.$base.szblPut(
+									"/api/orders/" + item.id + 
+									"?m=" + this.$userMsg.userid + 
+									"&tk=" + this.$userMsg.token +
+									"&state=" + this.$base.getState() + 
+									"&appid=" + this.$DEVELOPER.szblid, {
+										'appid': this.$DEVELOPER.szblid,
+										'id': item.id,
+										'status': '5'
+									})
+							}).then(res => {
+								uni.showToast({
+									title: '退款成功'
+								})
+								this.tabChange(this.actType[0] ,0)
+							}).catch(err => {
+								console.log(err)
+							})
+						}
+						if (res.cancel) {
+							return
+						}
+					}
+				})
+			},
+			
+			selfDelive() { // 本店配送
+				
+				if(this.shopInfo.kw0 === '' || 
+					this.shopInfo.kw0 === null || 
+					this.shopInfo.kw0 === 'null' || 
+					this.shopInfo.kw0 === undefined) {
+						uni.showToast({
+							title: '未填写真实姓名  请先完善个人信息'
+						})
+						
+						return
+					}
+				
+				
+				uni.showModal({
+					content: `确认自己进行配送？`,
+					showCancel: true,
+					confirmColor: this.$PROP.hdsh_color,
+					success: res => {
+						
+						this.selOrderItem.item.jsondata.psydh = this.shopInfo.kw1 // 配送员手机号码
+						this.selOrderItem.item.jsondata.psyxm = this.shopInfo.kw0 // 配送员真实姓名
+						
+						if (res.confirm) {
+							this.$base.szblPut(
+								"/api/orders/" + this.selOrderItem.item.id + 
+								"?m=" + this.$userMsg.userid + 
+								"&tk=" + this.$userMsg.token +
+								"&state=" + this.$base.getState() + 
+								"&appid=" + this.$DEVELOPER.szblid, {
+									'appid': this.$DEVELOPER.szblid,
+									'id': this.selOrderItem.item.id,
+									'status': '2', // 修改订单为 `待发货` 状态
+									'kw10': this.$userMsg.userid, // 配送员用户ID
+									'jsondata': this.selOrderItem.item.jsondata
+								},
+							).then(res => {
+								uni.showToast({
+									title: '已安排配送',
+									icon: 'success'
+								})
+								this.$refs.delivery_pop.close()
+								this.tabChange(this.actType[3], 3) // 订单 Tab 改为待收货
+							}).catch(err => {
+								console.log(err)
+							})
+						}
+						if (res.cancel) {
+							return
+						}
+					}
+				})
+			},
+			
+			handleDelive(item, index) {
+				uni.showModal({
+					content: `确认安排${item.kw0}进行此货物的配送？`,
+					showCancel: true,
+					confirmColor: this.$PROP.hdsh_color,
+					success: res => {
+						
+						this.selOrderItem.item.jsondata.psydh = item.kw1 // 配送员手机号码
+						this.selOrderItem.item.jsondata.psyxm = item.kw0 // 配送员真实姓名  
+						// 'psyxm': item.kw0 // 配送员真实姓名  
+						
+						if (res.confirm) {
+							this.$base.szblPut(
+								"/api/orders/" + this.selOrderItem.item.id + 
+								"?m=" + this.$userMsg.userid + 
+								"&tk=" + this.$userMsg.token +
+								"&state=" + this.$base.getState() + 
+								"&appid=" + this.$DEVELOPER.szblid, {
+									'appid': this.$DEVELOPER.szblid,
+									'id': this.selOrderItem.item.id,
+									'status': '2', // 修改订单为 `待发货` 状态
+									'kw10': item.id, // 配送员用户ID
+									'jsondata': this.selOrderItem.item.jsondata
+								},
+							).then(res => {
+								uni.showToast({
+									title: '已安排配送',
+									icon: 'success'
+								})
+								this.$refs.delivery_pop.close()
+								this.tabChange(this.actType[3], 3) // 订单 Tab 改为待收货
+							}).catch(err => {
+								console.log(err)
+							})
+						}
+						if (res.cancel) {
+							return
+						}
+					}
+				})
+			},
+			
+			confirmDelivery(item, index) {
+				this.selOrderItem = {item: item, index: index}
+				
+				this.$base.szblGet('/api/users/br', {
+					m: this.$userMsg.userid,
+					tk: this.$userMsg.token,
+					state: this.$base.getState(),
+					appid: this.$DEVELOPER.szblid,
+					rpflag: this.$DEVELOPER.cid,
+					areacode: this.$areaMsg.id,
+					pnum: '1',
+					psize: '1000',
+					rid: '15844996086031044545059', // 角色ID
+					oid: '15844978590081769957231', // 组织ID
+					gid: 1
+				}).then(res => {
+					this.personList = this.$base.strResToJson(res.data)
+					this.$refs.delivery_pop.open()
+				}).catch(err => { 
+					console.log(err)
+				})
+			},
+			
+			// 绑定配送员
+			bindPerson() {
+				console.log('绑定配送员')
+				this.$base.szblGet('/api/user/bp', {
+					m: this.$userMsg.userid,
+					tk: this.$userMsg.token,
+					state: this.$base.getState(),
+					appid: this.$DEVELOPER.szblid,
+					rpflag: this.$DEVELOPER.cid,
+					username: this.searchPhone, // 手机号码
+					gid: '1'
+				}).then(res => {
+					console.log(res)
+				}).catch(err => {
+					console.log(err)
+				})
+			},
+			
 			toLogin() {
 				this.$store.commit('set_page_data', {
 					page: '/pages/order/orderList/orderList',
@@ -225,9 +473,9 @@
 					"state": this.$base.getState(),
 					"pnum": this.pnum,
 					"psize": 8,
-					"createuserid": this.$userMsg.userid,
 					"rpflag": this.$DEVELOPER.cid,
-					"appid": this.$DEVELOPER.szblid
+					"appid": this.$DEVELOPER.szblid,
+					"unit": this.unit_data.id
 				}
 				
 				let status = pstatus
@@ -267,9 +515,7 @@
 				//重置查询返回的数组及页数
 				// this.order_list = []
 				// this.order_obj.pnum = 1
-				
 				this.pnum = 1
-				
 				//订单类型切换
 				this.actTypeIndex = index;
 				// this.order_obj.status = item.status
@@ -387,49 +633,6 @@
 				// #endif
 			},
 			/**
-			 * 支付成功后调用公共增加销量、发短信的方法
-			 * @param {Object} x 订单
-			 * @param {Number} index 订单下标
-			 */
-			paySuccess(x, index) {
-				let obj = {
-					phones: x.kw1,
-					cn_1: x.name,
-					cn_2: '',
-					cn_3: ''
-				}
-				if (this.order_obj.gid == 1) {
-					obj.cn_2 = "民宿的新"
-					obj.cn_3 = "请在半小时内在后台确认是否接受订单,逾期将自动失效."
-				} else if (this.order_obj.gid == 2) {
-					obj.cn_2 = "新加"
-					if (x.kw17) {
-						obj.cn_3 = x.kw6 + "下单了一份外卖订单，请尽快送至 ' " + x.address + " '，联系电话：" + x.kw7
-					} else {
-						obj.cn_3 = x.kw6 + "下单了一份美食订单，联系电话：" + x.kw7
-					}
-				} else if (this.order_obj.gid == 3) {
-					obj.cn_2 = "新加"
-					if (x.jsondata.length == 1) {
-						obj.cn_3 = x.kw6 + "购买了店内1件商品"
-					} else {
-						obj.cn_3 = x.kw6 + "购买了店内多件商品"
-					}
-				} else if (this.order_obj.gid == 4) {
-					obj.cn_2 = "新加"
-					obj.cn_3 = x.kw6 + "预订了" + x.kw0.replace(/【/g, " ").replace(/】/g, " ")
-				} else if (this.order_obj.gid == 7) {
-					obj.cn_2 = "套票",
-						obj.cn_3 = x.kw6 + "购买了" + x.kw0.replace(/【/g, " ").replace(/】/g, " ")
-				}
-
-				this.order_list[index].status = 4
-				
-				this.$base.paySuccess(1, this.$userMsg.userid, this.$userMsg.token, this.$DEVELOPER.szblid, x.id, obj.phones,
-					obj.cn_1, obj.cn_2, obj.cn_3)
-
-			},
-			/**
 			 * 跳转到评论
 			 * @param {Object} x 订单
 			 */
@@ -508,24 +711,6 @@
 							}).catch(msg => {
 								console.log(msg, '修改订单状态失败原因')
 							})
-							
-							// this.$base.szblPut(
-							// 	"/api/orders/" + x.id + 
-							// 	"?m=" + this.$userMsg.userid + 
-							// 	"&tk=" + this.$userMsg.token + 
-							// 	"&state=" + this.$base.getState()
-							// ).then(dataJson1 => {
-							// 	this.order_list[index].status = 6
-							// 	uni.showToast({
-							// 		icon: 'none',
-							// 		title: '确认收货成功',
-							// 		mask: false,
-							// 		duration: 1000
-							// 	})
-							// }).catch(msg => {
-							// 	console.log(msg)
-							// })
-							
 						}
 						if (res.cancel) {
 							return
@@ -655,6 +840,7 @@
 		top: 90upx;
 		position: absolute;
 		z-index: 1;
+		right: 0upx;
 	}
 
 	.wl-msg-box p {
@@ -673,7 +859,7 @@
 		border-right: 15upx solid transparent;
 		border-bottom: 15upx solid #888;
 		top: -15upx;
-		left: 60upx;
+		left: 80%;
 	}
 
 	.orders-item {
@@ -965,14 +1151,25 @@
 		text-align: center;
 		border-bottom: 4upx solid #fff;
 		color: #999;
+		padding: 12upx 0px;
+	}
+	
+	.type-cont .item:first-child {
+		border-top-left-radius: 24upx;
+		border-bottom-left-radius:24upx;
+	}
+	
+	.type-cont .item:last-child {
+		border-top-right-radius: 24upx;
+		border-bottom-right-radius: 24upx;
 	}
 
 	.type-cont .order-tab {
-		height: 75upx;
-		line-height: 75upx;
+		width: 97%;
+		margin: 0px auto 12upx;
 		background: #fff;
-		margin-bottom: 12upx;
 		justify-content: space-around;
+		border-radius: 20upx;
 	}
 
 	.type-cont .ac {

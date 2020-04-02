@@ -19,7 +19,7 @@
 				</image>
 			</view>
 			
-			<view @click="toCity" class="locat-min">{{area.shortname}}</view>
+			<view @click="toCity" class="locat-min">{{ unit_data.name }}</view>
 			<text @click="toCity" class="font-icon">&#xe642;</text>
 			
 			
@@ -70,9 +70,23 @@
 			</view>
 
 			<view class="new-list">
-				<view class="new-item" v-for="(x,index) in list" :key="index" @click="toShopDetail(x)">
+				<view class="new-item" style="position: relative;" v-for="(x,index) in list" :key="index" @click="toShopDetail(x)">
 					
-					<image v-show="x.showFlag === true" :style="{ opacity: x.showFlag === true ? 1 : 0 }" @load="loadCompleteList(index)" :src="$base.urlPrex + x.photo[0]" mode="aspectFill"></image>
+					<view 
+						v-if="x.sticktop == '1' &&  x.showFlag === true" 
+						style="
+						padding: 0upx 14upx;
+						border-radius: 10upx;
+						z-index: 1;
+						background-color: #eb544d;
+						text-align: center;
+						position: absolute;
+						color: #fff;
+						font-size: 24upx;
+						right: 0px;
+						top: 0upx;">推荐</view>
+					
+					<image style="display: block;" :style="{ opacity: x.showFlag === true ? 1 : 0 , height: x.showFlag === true ? '216upx' : '0upx' }" @error="loadCompleteList(index)" @load="loadCompleteList(index)" :src="$base.urlPrex + x.photo[0]" mode="aspectFill"></image>
 					<view class="list-skeleton" v-show="x.showFlag === false" style="height: 216upx; width: 100%; background-color: #ccc;"></view>
 					
 					<view class="item-bottom">
@@ -105,6 +119,9 @@
 		</view>
 		
 		<uni-popup @change="skuPopChange" class="sku-list" ref="sku_pop" type="center">
+			
+			<image class="sku-image" :src="$base.urlPrex + selectSku.photo[0]" style="width: 180upx; height: 180upx;"></image>
+			
 			<view class="spu-name">{{ spuItem.name }}</view>
 			<view>规格：</view>
 			<view class="sku-list-wrapper">
@@ -119,8 +136,30 @@
 			<view>数量：</view>
 			<uni-number-box style="transform: scale(0.8); transform-origin: 0 0; margin-top: 10upx;" class="shop-number" @change="skuNumberChange" :value="1" :min="1" :max="99"></uni-number-box>
 			
-			<view style="display: flex; justify-content: flex-end;">
-				<text @click="addCart" class="font-icon bg-hdsh" style="font-size: 32upx; color: #fff; border-radius: 50%; padding: 12upx;">&#xe655;</text>
+			<view style="
+				position: absolute;
+				padding: 12upx 24upx;
+				left: 0upx;
+				bottom: 0upx;
+				width: 100%;
+				background-color: #eee;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;">
+				<text>
+					<text style="color: #EB544D;">¥ {{ selectSku.kw0 }}</text><text>/单价</text>
+				</text>
+				
+				<text 
+					@click="addCart" 
+					class="font-icon bg-hdsh" 
+					style="
+						font-size: 28upx; 
+						color: #fff; 
+						border-radius: 8upx;
+						padding: 4upx 16upx;">
+					添加购物车
+				</text>
 			</view>
 		</uni-popup>
 		
@@ -138,7 +177,7 @@ import shopCartBtn from '@/components/shop-cart-btn.vue'
 import uniPopup from "@/components/uni-popup/uni-popup.vue"
 import shopCartModel from '@/components/shop-cart-model.vue'
 
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters, mapState, mapActions } from 'vuex';
 
 export default {
 	components: {
@@ -155,11 +194,11 @@ export default {
 			
 			imgTop: [
 				{
-					url: 'https://apitest.nkshuju.com/Media/photo/15819938331371952069387/20200221/1582259761578252139505',
+					url: 'https://apitest.nkshuju.com/Media/photo/15825156999351824866977/20200330/1585560513494118848056',
 					showFlag: false
 				},
 				{
-					url: 'https://apitest.nkshuju.com/Media/photo/15819938331371952069387/20200219/1582103089597928277603',
+					url: 'https://apitest.nkshuju.com/Media/photo/15825156999351824866977/20200330/15855605346711935767225',
 					showFlag: false
 				}
 			], //顶部轮播图
@@ -180,7 +219,9 @@ export default {
 			sku: [],
 			spuItem: {},
 			
-			selectSku: {}, // 选择到的规格
+			selectSku: {
+				photo: []
+			}, // 选择到的规格
 			skuNumber: 1 ,// 规格数量
 			
 			pageNumber: 1,
@@ -188,20 +229,20 @@ export default {
 			pageSize: 9,
 			
 			timeNow: '',
-			timeAfter: ''
+			timeAfter: '',
 		}
 	},
 	computed: {
+		...mapState({
+		    unit_data: state => state.zhsq.unit_data
+		}),
 		...mapGetters(['get_userMsg', 'wxavartar_flag'])
 	},
 	
 	onLoad() {
-		this.area = this.$areaMsg;
-		uni.setNavigationBarTitle({
-			title: this.$DEVELOPER.name
-		})
-		let a = uni.getSystemInfoSync()
-		this.windowHeight = a.windowHeight
+		
+		let a = uni.getSystemInfoSync() // 首页配置
+		this.windowHeight = a.windowHeight // 首页配置
 		
 		let count = 0
 		let timer = setInterval(() => {
@@ -215,6 +256,11 @@ export default {
 				clearInterval(timer)
 			}
 		}, 500)
+		
+		
+		uni.setNavigationBarTitle({
+			title: this.unit_data.name
+		})
 
 	},
 	onShow() {
@@ -268,6 +314,7 @@ export default {
 		
 		// 列表图片加载完毕
 		loadCompleteList(index) {
+			console.log('加载完')
 			this.list[index].showFlag = true
 		},
 		
@@ -329,6 +376,7 @@ export default {
 				name: this.spuItem.name, //商品名
 				fid: this.selectSku.id, //规格id
 				cid: this.spuItem.id, //商品id
+				gid: this.spuItem.labelid, // 商品Labelid
 				kw0: this.selectSku.name, // 规格名称
 				kw1: this.skuNumber, // 数量
 				kw2: this.selectSku.kw0, // 加入购物车时规格的价钱
@@ -339,6 +387,7 @@ export default {
 				areacode: this.$areaMsg.id,
 				areaname: this.$areaMsg.name,
 				labelid: '1014002',
+				unit: this.unit_data.id
 			}
 			
 			this.$base.szblGet('/api/carts', {
@@ -428,6 +477,10 @@ export default {
 		},
 		
 		add_cart(item) {
+			uni.showLoading({
+				title: '加载中',
+				mask: true
+			})
 			this.spuItem = item
 			this.$base.szblGet("/api/skus", {
 				m: this.$DEVELOPER.szblid,
@@ -447,6 +500,10 @@ export default {
 					this.selectSku = this.sku[0]
 				}
 				this.$refs.sku_pop.open()
+				uni.hideLoading()
+			}).catch(err => {
+				console.log(err)
+				uni.hideLoading()
 			})
 		},
 		
@@ -462,8 +519,11 @@ export default {
 				"status": '2',
 				"appid": this.$DEVELOPER.szblid,
 				"rpflag": this.$DEVELOPER.cid,
-				"areacode": this.$areaMsg.id,
-				"labelid": '1009001'
+				"orderby_sticktop": "d_d",
+				"orderby_createtime": "d_d",
+				// "areacode": this.$areaMsg.id,
+				// "labelid": '1009001',
+				"unit": this.unit_data.id
 			}
 			
 			this.$base.szblGet('/api/spus?', obj).then(res => {
@@ -485,7 +545,7 @@ export default {
 		
 		toMore() {
 			uni.switchTab({
-				url: '/pages/shopping/productList/productList'
+				url: '/pages/tabBar/productList/productList'
 			});
 		},
 		
@@ -569,7 +629,7 @@ export default {
 	}
 	
 	.locat-bar .flex-cont {
-		width: 64%;
+		width: 46%;
 	}
 	
 	.locat-bar .search-input .search-icon {
@@ -887,6 +947,19 @@ export default {
 		font-size: 24upx;
 	}
 	
+	.index .uni-popup.sku-list {
+		position: relative;
+	}
+	
+	.index .uni-popup.sku-list .sku-image {
+		position: absolute;
+		top: -120upx;
+		left: 20upx;
+		box-sizing: border-box;
+		border: 4upx solid #eee;
+		border-radius: 8upx;
+		box-shadow: 0upx 0upx 8upx #eee;
+	}
 	
 	.index .uni-popup.sku-list .uni-popup__wrapper-box .spu-name {
 		text-align: center;

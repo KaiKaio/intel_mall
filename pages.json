@@ -8,8 +8,8 @@
 				},
 				"app-plus": {
 					"titleNView": false
-				},
-				"navigationBarTitleText": ""
+				}
+				// "navigationBarTitleText": ""
 			}
 		},
 		{
@@ -17,8 +17,8 @@
 			"style": {
 				"h5": {
 					"titleNView": false
-				},
-				"navigationBarTitleText": "我的"
+				}
+				// "navigationBarTitleText": "我的"
 			}
 		},
 		{
@@ -26,8 +26,8 @@
 			"style": {
 				"h5": {
 					"titleNView": false
-				},
-				"navigationBarTitleText": "订单"
+				}
+				// "navigationBarTitleText": "订单"
 			}
 		},
 		{
@@ -38,8 +38,8 @@
 				},
 				"app-plus": {
 					"titleNView": false
-				},
-				"navigationBarTitleText": "搜索"
+				}
+				// "navigationBarTitleText": "搜索"
 			}
 		}
 	],
@@ -52,8 +52,8 @@
 					"style": {
 						"h5": {
 							"titleNView": false
-						},
-						"navigationBarTitleText": "收货地址"
+						}
+						// "navigationBarTitleText": "收货地址"
 					}
 				},
 				{
@@ -61,8 +61,8 @@
 					"style": {
 						"h5": {
 							"titleNView": false
-						},
-						"navigationBarTitleText": "我的收货地址"
+						}
+						// "navigationBarTitleText": "我的收货地址"
 					}
 				},
 				{
@@ -73,8 +73,8 @@
 						},
 						"app-plus": {
 							"titleNView": false
-						},
-						"navigationBarTitleText": "选择区域"
+						}
+						// "navigationBarTitleText": "选择区域"
 					}
 				},
 				{
@@ -82,8 +82,8 @@
 					"style": {
 						"h5": {
 							"titleNView": false
-						},
-						"navigationBarTitleText": "评论"
+						}
+						// "navigationBarTitleText": "评论"
 					}
 				},
 				{
@@ -91,8 +91,8 @@
 					"style": {
 						"h5": {
 							"titleNView": false
-						},
-						"navigationBarTitleText": "登录"
+						}
+						// "navigationBarTitleText": "登录"
 					}
 				},
 				{
@@ -100,8 +100,8 @@
 					"style": {
 						"h5": {
 							"titleNView": false
-						},
-						"navigationBarTitleText": "个人信息"
+						}
+						// "navigationBarTitleText": "个人信息"
 					}
 				}
 			]
@@ -114,8 +114,8 @@
 					"style": {
 						"h5": {
 							"titleNView": false
-						},
-						"navigationBarTitleText": "订单详情"
+						}
+						// "navigationBarTitleText": "订单详情"
 					}
 				}
 			]
@@ -128,8 +128,8 @@
 					"style": {
 						"h5": {
 							"titleNView": false
-						},
-						"navigationBarTitleText": "商品详情"
+						}
+						// "navigationBarTitleText": "商品详情"
 					}
 				},
 				{
@@ -137,8 +137,8 @@
 					"style": {
 						"h5": {
 							"titleNView": false
-						},
-						"navigationBarTitleText": "促销"
+						}
+						// "navigationBarTitleText": "促销"
 					}
 				},
 				{
@@ -149,8 +149,8 @@
 						},
 						"app-plus": {
 							"titleNView": false
-						},
-						"navigationBarTitleText": "购物车"
+						}
+						// "navigationBarTitleText": "购物车"
 					}
 				},
 				{
@@ -161,8 +161,31 @@
 						},
 						"app-plus": {
 							"titleNView": false
-						},
-						"navigationBarTitleText": "确认订单"
+						}
+						// "navigationBarTitleText": "确认订单"
+					}
+				}
+			]
+		},
+		{
+			"root":"pages/shopAdmin",
+			"pages": [
+				{
+					"path": "index",
+					"style": {
+						"h5": {
+							"titleNView": false
+						}
+						// "navigationBarTitleText": "商家管理"
+					}
+				},
+				{
+					"path": "delivery",
+					"style": {
+						"h5": {
+							"titleNView": false
+						}
+						// "navigationBarTitleText": "配送管理"
 					}
 				}
 			]
@@ -180,7 +203,7 @@
 	},
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "智慧商圈",
+		"navigationBarTitleText": "加载中...",
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8"
 	},

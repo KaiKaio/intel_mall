@@ -64,29 +64,40 @@
 				<p class="time">下单时间：{{oItem.createtime}}</p>
 			</view>
 			
-			<view class="currency-block">
+		<!-- 	<view class="currency-block">
 				<p class="kd" v-if="oItem.gid == 3 && oItem.kw18 == '0'">（免运费）</p>
 				<p class="kd" v-if="oItem.gid == 3 && oItem.kw18 != '0'">{{"(含配送费" + oItem.kw9 + "元)"}}</p>
 				<p v-if="oItem.gid != 9" class="currency-amount">{{oItem.kw4}}</p>
 				<p v-if="oItem.gid != 9" class="currency-head">实付<span>:</span>¥</p>
+			</view> -->
+			
+			<view class="button-block" v-if="oItem.status == 2">
+				<view style="font-size: 28upx; margin: 0upx 20upx; ">
+					<text style="color: #666; width: 240upx; ">收货人：</text>
+					<text style="width: 360upx;">{{ oItem.jsondata.shr }}</text>
+				</view>
+				<view style="font-size: 28upx; margin: 0upx 20upx; ">
+					<text style="color: #666; width: 240upx; ">联系方式：</text>
+					<text style="width: 360upx;">{{ oItem.jsondata.shdh }}</text>
+				</view>
 			</view>
 			
-			<view class="button-block" v-if="oItem.status==0">
-				<view class="orders-button">
-					<a class="go-pay color-white bg-hdsh" @click="goPay(oItem, oIndex)">立即付款</a>
-					<a class="cancel" @click="orderDel(oItem,oIndex)">取消订单</a>
+			<view class="button-block" v-if="oItem.status == 2">
+				<view style="font-size: 28upx; margin: 0upx 20upx; ">
+					<text style="color: #666; font-size: 24upx;">收货地址：</text>
+					{{ oItem.address }}
 				</view>
 			</view>
 			
 			<view class="button-block" v-if="oItem.status == 2">
 				<view class="orders-button">
 					
-					<a class="go-pay color-white bg-hdsh" v-if="oItem.status==2" @click="clickOk(oItem,oIndex)">确认收货</a>
+					<!-- <a class="go-pay color-white bg-hdsh" v-if="oItem.status==2" @click="clickOk(oItem,oIndex)">确认收货</a> -->
 					
-					<a class="cancel wl" v-if="oItem.status == 2" @click.stop="wlClick(oIndex)">物流信息
-						<view class="wl-msg-box" v-if="oIndex===windex">
-							<p>物流公司：{{oItem.delivery}}</p>
-							<p>物流编号：{{oItem.delivery_id}}</p>
+					<a class="cancel wl" @click.stop="wlClick(oIndex)">配送信息
+						<view class="wl-msg-box" v-if="oIndex === windex">
+							<p>配送员电话：{{oItem.jsondata.psydh}}</p>
+							<p>配送员姓名：{{oItem.jsondata.psyxm}}</p>
 						</view>
 					</a>
 				</view>
@@ -114,34 +125,31 @@
 	import { mapState } from 'vuex';
 	
 	export default {
+		name: 'orderList',
 		data() {
 			return {
 				order_list: [],
 				windex: '',
 				b_hint: '到底啦~',
 				actType: [
+					// {
+					// 	name: '全部',
+					// 	status: ''
+					// },
+					// {
+					// 	name: '待发货',
+					// 	status: 1
+					// },
 					{
-						name: '全部',
-						status: ''
-					},
-					{
-						name: '待付款',
-						status: 0
-					},
-					{
-						name: '待发货',
-						status: 1
-					},
-					{
-						name: '待收货',
+						name: '正在配送',
 						status: 2
 					},
 					// {
-					// 	name: '待评价',
+					// 	name: '我绑定的店铺',
 					// 	status: 3
 					// },
 					{
-						name: '交易完成',
+						name: '配送完成',
 						status: 4
 					},
 				], //当前正在使用的tab
@@ -154,40 +162,39 @@
 				loginFlag: false
 			};
 		},
-		
 		computed: {
 			...mapState({
 			    unit_data: state => state.zhsq.unit_data
-			}),
+			})
 		},
 		
 		onLoad(obj) {
-			
+			uni.setNavigationBarTitle({
+				title: this.unit_data.name
+			})
 		},
-		onShow() {
-			
+		
+		onShow () {
 			if (this.$userMsg.userid === null) { // 判断是否已登录
 				this.loginFlag = false
 			} else {
 				this.loginFlag = true
 				
-				let status = this.$store.state.zhsq.orderStatus
+				// let status = this.$store.state.zhsq.orderStatus
 				
-				for(let i = 0; i < this.actType.length; i++) {
-					if(this.actType[i].status === status) {
-						this.tabChange(this.actType[i], i)
-					}
-				}
+				// for(let i = 0; i < this.actType.length; i++) {
+					// if(this.actType[i].status === status) {
+						this.tabChange(this.actType[0], 0)
+					// }
+				// }
 				
 			}
 			
 			
 			
-			let status = this.actType[this.actTypeIndex].status
-			
-			uni.setNavigationBarTitle({
-				title: this.unit_data.name
-			})
+			// let status = this.actType[this.actTypeIndex].status
+			//初始化数据
+			// this.getList(status);
 		},
 		onReachBottom() {
 			let status = this.actType[this.actTypeIndex].status
@@ -195,10 +202,6 @@
 			// 上拉加载
 			this.pnum++;
 			if (this.pnum > this.page_num) {
-				uni.showToast({
-					title: '到底啦',
-					icon: 'none'
-				})
 				return
 			} else {
 				this.getList(status, true)
@@ -223,9 +226,9 @@
 					"m": this.$userMsg.userid,
 					"tk": this.$userMsg.token,
 					"state": this.$base.getState(),
+					"kw10": this.$userMsg.userid,
 					"pnum": this.pnum,
 					"psize": 8,
-					"createuserid": this.$userMsg.userid,
 					"rpflag": this.$DEVELOPER.cid,
 					"appid": this.$DEVELOPER.szblid
 				}
@@ -267,9 +270,7 @@
 				//重置查询返回的数组及页数
 				// this.order_list = []
 				// this.order_obj.pnum = 1
-				
 				this.pnum = 1
-				
 				//订单类型切换
 				this.actTypeIndex = index;
 				// this.order_obj.status = item.status
@@ -333,58 +334,6 @@
 					}
 				});
 				// console.log(4)
-			},
-			/**
-			 * 调起支付的方法
-			 * @param {Object} x 订单
-			 * @param {Object} index 订单下标 
-			 */
-			goPay(x, index) {
-				// #ifdef H5
-				this.$base.getWxPay(
-					this.$userMsg.userid, 
-					this.$userMsg.token, 
-					x.kw2, 
-					this.$DEVELOPER.wxPayMarkPUBLIC,
-					uni.getStorageSync("wxOpenid")
-				).then(res => {
-					return this.$base.szblPut(
-					"/api/orders/" + x.id + 
-					"?m=" + this.$userMsg.userid + 
-					"&tk=" + this.$userMsg.token +
-					"&state=" + this.$base.getState() + 
-					"&appid=" + this.$DEVELOPER.szblid, {
-						'appid': this.$DEVELOPER.szblid,
-						'id': x.id,
-						'status': '1'
-					})
-				}).then(res => {
-					// 删除已经购买的商品
-					// x.jsondata.splb.map(item => {
-					// 	return this.$base.szblDel(`/api/carts
-					// 		?m=${this.$userMsg.userid}
-					// 		&tk=${this.$userMsg.token}
-					// 		&state=${this.$base.getState()}`, item
-					// 	)
-					// })
-					uni.showToast({
-						icon: 'none',
-						mask: false,
-						title: '付款成功',
-						duration: 1500
-					})
-					uni.reLaunch({
-						url:'/pages/tabBar/member/member'
-					})
-				}).catch(msg => {
-					uni.showToast({
-						icon: 'none',
-						mask: false,
-						title: err,
-						duration: 1500
-					})
-				});
-				// #endif
 			},
 			/**
 			 * 支付成功后调用公共增加销量、发短信的方法
@@ -655,6 +604,7 @@
 		top: 90upx;
 		position: absolute;
 		z-index: 1;
+		right: 0upx;
 	}
 
 	.wl-msg-box p {
@@ -673,7 +623,7 @@
 		border-right: 15upx solid transparent;
 		border-bottom: 15upx solid #888;
 		top: -15upx;
-		left: 60upx;
+		right: 40upx;
 	}
 
 	.orders-item {
@@ -961,7 +911,6 @@
 	}
 
 	.type-cont .item {
-		width: 18.93%;
 		text-align: center;
 		border-bottom: 4upx solid #fff;
 		color: #999;

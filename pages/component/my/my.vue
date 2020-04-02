@@ -8,6 +8,14 @@
 			<input class="form-item-input" type="text" v-model="formInfo.kw12" />
 		</view>
 		<view class="form-item">
+			<text class="form-label">真实姓名：</text>
+			<input class="form-item-input" type="text" v-model="formInfo.kw0" />
+		</view>
+		<view class="form-item">
+			<text class="form-label">手机号码：</text>
+			<input class="form-item-input" type="text" v-model="formInfo.kw1" />
+		</view>
+		<view class="form-item">
 			<text class="form-label">性别：</text>
 			<radio-group class="form-radio" @change="sexChange">
 				<label class="radio-item">
@@ -96,6 +104,11 @@
 				} else {
 					this.wxAvatar = false
 				}
+				
+				if(this.formInfo.kw0 === null) { // 处理真实姓名
+					this.formInfo.kw0 = '暂无'
+				}
+				
 			})
 		},
 		methods: {
@@ -199,12 +212,18 @@
 						'kw12': this.formInfo.kw12,
 						'kw3': this.formInfo.kw3,
 						'kw15': this.formInfo.kw15,
-						'kw16': this.formInfo.kw16
+						'kw16': this.formInfo.kw16,
+						'kw0': this.formInfo.kw0,
+						'kw1': this.formInfo.kw1
 					}
 				).then(res => {
 					uni.showToast({
 						title: res.msg,
 						icon: 'success'
+					})
+					uni.reLaunch({
+						url: '/pages/tabBar/member/member',
+						success: res => {}
 					})
 				}).catch(err => {
 					uni.showToast({

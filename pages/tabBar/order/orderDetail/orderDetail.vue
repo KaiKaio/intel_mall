@@ -78,21 +78,23 @@
 						<text class="font-icon">&#xe699;</text>
 					</view>
 					<view class="od-address">
-						<view>
-							<p>{{detail.address}}</p>
+						<view style="font-size: 25upx;">
+							<p style="display: flex;"><text style="width: 140upx; text-align: right;">收货地址：</text>{{detail.address}}</p>
+							<p style="display: flex;"><text style="width: 140upx; text-align: right;">联系方式：</text>{{shdh}}</p>
+							<p style="display: flex;"><text style="width: 140upx; text-align: right;">收货人：</text>{{shr}}</p>
 						</view>
 					</view>
 				</view>
 				
 				<view class="od-bottom">
-					<view class="od-bt-detail" v-for="(gItem, gIndex) in detail.jsondata.splb" :key="gIndex">
+					<view class="od-bt-detail" v-for="(gItem, gIndex) in splb" :key="gIndex">
 						<view class="img">
 							<image :src="$base.urlPrex + gItem.photo" mode="'aspectFit'"></image>
 						</view>
 						<view class="detail">
-							<p>{{gItem.name}}</p>
-							<p>{{gItem.kw0}}</p>
-							<p>x{{gItem.kw1}}</p>
+							<p>商品名称：{{gItem.name}}</p>
+							<p>规格：{{gItem.kw0}}</p>
+							<p>数量：x{{gItem.kw1}}</p>
 							<p class="detail-price">
 								<span>¥{{gItem.kw2}}</span>
 							</p>
@@ -144,7 +146,7 @@
 					</li>
 					<li v-if="sort != 9">
 						<span>付款方式：</span>
-						<span>{{detail.jsondata.fkfs}}</span>
+						<span>{{fkfs}}</span>
 					</li>
 					<li>
 						<span>创建时间：</span>
@@ -153,6 +155,26 @@
 				</ul>
 			</view>
 		</view>
+		
+		<view class="od-info" v-if="detail.status == 2 || detail.status == 4">
+			<view class="od-info-title">
+				<span class="color-hdsh">▍</span>配送信息
+			</view>
+			<view class="od-info-detail">
+				<ul>
+					<li>
+						<span>配送员电话：</span>
+						<span>{{psydh}}</span>
+					</li>
+					<li>
+						<span>配送员姓名：</span>
+						<span>{{psyxm}}</span>
+					</li>
+				</ul>
+			</view>
+		</view>
+		
+		
 	</view>
 </template>
 
@@ -166,7 +188,13 @@
 				sort: '', //分类：1-民宿，2-美食，3-商品，4-票务，5-爱心消费，6-线下活动，7-套票，8-剧场（电影）票，9-剧场（电影）赠票
 				days: 0, //预定民宿的天数
 				styleList: [], //规格列表，美食用
-				num: [], //存某规格购买的数量，美食用
+				num: [], //存某规格购买的数量，美食用,
+				splb: [],
+				fkfs: '',
+				psyxm: '',
+				psydh: '',
+				shdh: '',
+				shr: '',
 			};
 		},
 		
@@ -198,6 +226,12 @@
 					
 					let r = this.$base.strResToJson(res.data)
 					this.detail = r
+					this.splb = this.detail.jsondata.splb
+					this.fkfs = this.detail.jsondata.fkfs
+					this.psydh = this.detail.jsondata.psydh
+					this.psyxm = this.detail.jsondata.psyxm
+					this.shdh = this.detail.jsondata.shdh
+					this.shr = this.detail.jsondata.shr
 				}).catch(err => {
 					console.log(err)
 				});

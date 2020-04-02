@@ -1,5 +1,5 @@
 <template>
-	<view v-if="showPopup" class="uni-popup" @touchmove.stop.prevent="clear">
+	<view v-if="showPopup" class="uni-popup">
 		<uni-transition :mode-class="['fade']" :styles="maskClass" :duration="duration" :show="showTrans" @click="onTap" />
 		<uni-transition :mode-class="ani" :styles="transClass" :duration="duration" :show="showTrans" @click="onTap">
 			<view class="uni-popup__wrapper-box" @click.stop="clear">
@@ -239,6 +239,8 @@
 		display: block;
 		/* #endif */
 		position: relative;
+		overflow-y: auto;
+		max-height: 80vh;
 	}
 
 	.content-ani {
@@ -263,14 +265,20 @@
 	
 	.index .uni-popup.sku-list .uni-popup__wrapper-box {
 		background-color: #fff;
-		padding: 20upx 24upx;
-		width: 80%;
+		padding: 20upx 24upx 80upx;
+		width: 90%;
+	}
+	
+	.index .uni-popup.sku-list .uni-popup__wrapper-box {
+		overflow-y: initial;
 	}
 	
 	.product-list .uni-popup.sku-list .uni-popup__wrapper-box {
+		padding: 20upx 24upx 80upx;
 		background-color: #fff;
-		padding: 20upx 24upx;
-		width: 80%;
+		width: 90%;
+		max-height: 80vh;
+		overflow-y: initial;
 	}
 	
 </style>

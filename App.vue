@@ -3,7 +3,6 @@
 	
 	export default {
 		onLaunch: function(obj) {
-			// #ifdef H5
 			this.$base.getTokenFromAppIdAndSecret(
 				this.$DEVELOPER.szblid, 
 				this.$DEVELOPER.szblsecret
@@ -13,16 +12,30 @@
 				//随后判断是否有用户信息，自动登录
 				return this.$base.autoLogin(this.$DEVELOPER.szblid)
 			}).then(msg => {
-				console.log(msg, '自动登录成功')
 				this.getUserMsg() // 获取用户信息
 				this.getCartList() // 获取购物车
 			}).catch(msg => {
 				console.log(msg, '错误')
 			});
-			// #endif
+			
+			
+			// 选择地区配置
+			if(uni.getStorageSync('zhsq_unitInfo') === "" || uni.getStorageSync('zhsq_areaMsg') === "") {
+				uni.reLaunch({
+					url: '/pages/component/citys/citys'
+				})
+			} else {
+				let zhsq_unitInfo_str = uni.getStorageSync('zhsq_unitInfo')
+				this.$store.commit('set_unit_data', this.$base.strResToJson(zhsq_unitInfo_str))
+				
+				
+				let zhsq_areaMsg_str = uni.getStorageSync('zhsq_areaMsg')
+				this.$areaMsg = this.$base.strResToJson(zhsq_areaMsg_str)
+				
+			}
 
 		},
-		onShow: function() {
+		async onShow() {
 			// 若获取Token的时间太久，则重刷页面
 			let diff = 0;
 			this.$STOPWATCH.now = new Date();
@@ -40,17 +53,15 @@
 			// #ifdef H5
 			let ua = window.navigator.userAgent.toLowerCase();
 			if (ua.match(/MicroMessenger/i) == "micromessenger") {
-				this.$base.getWxSign(this.$DEVELOPER.wxPayMarkPUBLIC); // 获取微信签名
 				
-				if (!uni.getStorageSync("wxOpenid") || uni.getStorageSync("wxOpenid") == 'null') {
-					this.$base.getWxUserOpenId(this.$DEVELOPER.wxPayMarkPUBLIC
-					).then( res => {
-						let openid = res.openid;
-						uni.setStorageSync("wxOpenid", openid)
-					}).catch(err => {
-						console.log(err, '错误信息')
-					})
-				}
+				// 获取微信签名
+				await this.$base.getWxSign(this.$DEVELOPER.wxPayMarkPUBLIC)
+				
+				this.$base.getWxUserOpenId(this.$DEVELOPER.wxPayMarkPUBLIC).then(res => {
+					uni.setStorageSync("wxOpenid", res.openid)
+				}).catch(err => {
+					console.log(err, '错误信息')
+				})
 			}
 			// #endif
 		},

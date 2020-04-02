@@ -1,43 +1,36 @@
 <template>
-	<!-- 产品列表页的容器 -->
 	<view class="product-list">
-		
-		<shop-cart-btn />
-		
+		<!-- 
 		<view class="top-wrap">
-			<!-- 搜索 -->
 			<view class="search-bar">
 				<view class="flex-cont search-input search-produc">
 					<input type="text" placeholder="搜索" confirm-type="'search'" @confirm="search" v-model="kw" />
 					<text class="font-icon search-icon">&#xe612;</text>
-					<text class="font-icon delete-icon" @click="fetchShopList(null)" v-show="kw !== ''">&#xe67f;</text>
+					<text class="font-icon delete-icon" @click="fetchShopList(null)" v-show="deleteButton">&#xe67f;</text>
 				</view>
 				<text class="search-btn bg-hdsh" @click="search">搜索</text>
 				
 			</view>
-			
+		</view> -->
+		
+		<view style="
+			border-radius: 24upx;
+			display: flex; 
+			justify-content: space-between;
+			margin: 12upx auto;
+			background-color: #fff;
+			width: 97%;">
+			<view style="transition: all .3s; border-top-left-radius: 24upx; border-bottom-left-radius: 24upx; width: 50%; padding: 12upx 0px; text-align: center;" :style="{backgroundColor: selTab === 0 ? '#eb544d' : '', color: selTab === 0 ? '#fff' : ''}" @click="selTab = 0">商品</view>
+			<view style="transition: all .3s; width: 50%; padding: 12upx 0px; text-align: center;" :style="{backgroundColor: selTab === 1 ? '#eb544d' : '', color: selTab === 1 ? '#fff' : ''}" @click="selTab = 1">订单</view>
+			<view style="transition: all .3s; border-top-right-radius: 24upx; border-bottom-right-radius: 24upx; width: 50%; padding: 12upx 0px; text-align: center;" :style="{backgroundColor: selTab === 2 ? '#eb544d' : '', color: selTab === 2 ? '#fff' : ''}" @click="selTab = 2">配送管理</view>
 		</view>
-
-
-		<view class="index-content">
+		
+		<view class="index-content" v-if="selTab === 0">
 			<view class="list-wrap">
-				<!-- 一级菜单 -->
-				<view class="first-menu">
-					<view class="item" :class="{'active': selFirst === index}" v-for="(item, index) in labels" :key="item.id" @click="selectLabel(item, index)">
-						{{ item.name }}
-					</view>
-				</view>
-				
 				<view class="new-list">
-					<!-- 二级菜单 -->
-					<view class="second-menu">
-						<view class="item" :class="{'active': selSecond === index}" v-for="(item, index) in labelsTow" :key="item.id" @click="selectLabelTow(item, index)">
-							{{ item.name }}
-						</view>
-					</view>
 					
 					<view class="shoplist" ref="viewBox" @scroll="scroll" v-show="list.length > 0">
-						<view style="position: relative;" class="new-item" v-for="(x,index) in list" :key="index" @click="toShopDetail(x)">
+						<view style="position: relative;" class="new-item" v-for="(x,index) in list" :key="index">
 							
 							<view
 								v-if="x.sticktop == '1'" 
@@ -53,28 +46,17 @@
 								right: 0px;
 								top: 0upx;">推荐</view>
 							
-							<image @load="loadCompleteList(index)" :src="$base.urlPrex + x.photo[0]" mode="aspectFill"></image>
-							<!-- <image v-show="x.showFlag === true" @load="loadCompleteList(index)" :src="$base.urlPrex + x.photo[0]" mode="aspectFill"></image> -->
-							<!-- <view class="list-skeleton" v-show="x.showFlag === false" style="height: 216upx; width: 100%; background-color: #ccc;"></view> -->
-							
+							<image @load="loadCompleteList(index)" :src="$base.urlPrex + x.photo[0]" mode="aspectFill"></image>							
 							<view class="item-bottom">
 								<view class="name">
 									<text>{{ x.name }}</text>
-									<!-- <text v-show="x.showFlag === true">{{ x.name }}</text> -->
-									<!-- <text v-show="x.showFlag === false" class="ske-name"></text> -->
 								</view>
 								
 								<view class="detail">
 									<text class="price">
 										<text>¥{{x.kw1}}</text>
-										<!-- <text v-show="x.showFlag === true">¥{{x.kw1}}</text> -->
-										<!-- <text v-show="x.showFlag === false" class="ske-price"></text> -->
 									</text>
-									
-									<!-- <text @click.stop="add_cart(x)" class="add-cart">+</text> -->
-									<text @click.stop="add_cart(x)" class="font-icon add-cart">&#xe606;</text>
-									<!-- <text v-show="x.showFlag === true" @click.stop="add_cart(x)" class="add-cart">+</text> -->
-									<!-- <text v-show="x.showFlag === false" class="ske-cart"></text> -->
+									<text @click.stop="editItem(x)" class="font-icon add-cart">&#xe698;</text>
 								</view>
 							</view>
 						</view>
@@ -88,72 +70,150 @@
 				</view>
 			</view>
 		</view>
-		
-		
+
 		<uni-popup @change="skuPopChange" class="sku-list" ref="sku_pop" type="center">
-			<image class="sku-image" :src="$base.urlPrex + selectSku.photo[0]" style="width: 180upx; height: 180upx;"></image>
+			<view class="spu-name">编辑商品</view>
 			
-			<view class="spu-name">{{ spuItem.name }}</view>
-			<view>规格：</view>
-			<view class="sku-list-wrapper">
-				<view v-if="sku === null">
-					暂无规格
-				</view>
-				<view class="sku-item" v-for="item in sku" :key="item.id" @click="clickSku(item)" :class="{'sku-active': item.id === selectSku.id}">
-					{{ item.name }}
-				</view>
+			<view>
+				<text class="form-label">状态：</text>
+				<radio-group class="form-radio" style="display: flex; margin-top: 8upx;" @change="changeStatus">
+					<label class="radio-item" style="margin-right: 28upx; display: flex;">
+						<view class="radio-icon" style="display: flex;">
+							<radio :checked="spuItem.status === 1" value="1" />
+						</view>
+						<view>下架</view>
+					</label>
+					<label class="radio-item" style="margin-right: 28upx; display: flex;">
+						<view class="radio-icon">
+							<radio :checked="spuItem.status === 2" value="2" />
+						</view>
+						<view>上架</view>
+					</label>
+				</radio-group>
 			</view>
 			
-			<view>数量：</view>
-			<uni-number-box style="transform: scale(0.8); transform-origin: 0 0; margin-top: 10upx;" class="shop-number" @change="skuNumberChange" :value="1" :min="1" :max="99"></uni-number-box>
+			<view class="form-item">
+				<text class="form-label">商品名称：</text>
+				<input class="form-item-input" type="text" v-model="spuItem.name" />
+			</view>
 			
-			<view style="
-				position: absolute;
-				padding: 12upx 24upx;
-				left: 0upx;
-				bottom: 0upx;
-				width: 100%;
-				background-color: #eee;
-				display: flex;
-				align-items: center;
-				justify-content: space-between;">
-				<text>
-					<text style="color: #EB544D;">¥ {{ selectSku.kw0 }}</text><text>/单价</text>
-				</text>
+			<view class="form-item">
+				<text class="form-label">计数单位：</text>
+				<input class="form-item-input" type="text" v-model="spuItem.kw7" />
+			</view>
+			
+			<view class="form-item">
+				<text class="form-label">咨询电话：</text>
+				<input class="form-item-input" type="text" v-model="spuItem.kw8" />
+			</view>
 				
-				<text 
-					@click="addCart" 
-					class="font-icon bg-hdsh" 
-					style="
-						font-size: 28upx; 
-						color: #fff; 
-						border-radius: 8upx;
-						padding: 4upx 16upx;">
-					添加购物车
-				</text>
+			<view class="form-item">
+				<text class="form-label">产品图片：</text>
+				<view class="upload-wrapper">
+					<template v-for="(item, index) in spuItem.photo">
+						<view class="upload-item" v-if=" spuItem.photo instanceof Array " :key="item">
+							<view class="idcard-img" :style="{ backgroundImage: `url(${ $base.urlPrex + item })` }">
+								<view class="delete-img" @click="deleteImg(item, index)">x</view>
+							</view>
+						</view>
+					</template>
+					
+					<view class="upload-area" @tap="onUploadPhoto">+</view>
+				</view>
 			</view>
+				
+			<view>
+				<view>规格：</view>
+				<view 
+					class="sku-item" 
+					v-for="(item, index) in sku" 
+					:key="item.id" 
+					style="
+						display: flex; 
+						border: 2upx solid #ccc; 
+						border-radius: 6upx; 
+						margin-bottom: 8upx; 
+						align-items: center;">
+					
+					<view
+						style="margin-right: 20upx; 
+						height: 160upx; 
+						width: 160upx; 
+						background-repeat: no-repeat; 
+						background-position: center;
+						background-size: cover;"
+						class="idcard-img" 
+						:style="{ backgroundImage: `url(${ $base.urlPrex + item.photo[0] })` }"
+					>
+					</view>
+					
+					<view>
+						<view>名称：{{ item.name }}</view>
+						<view>库存：{{ item.kw2 }}</view>
+						<view>价格：{{ item.kw0 }}</view>
+					</view>
+					
+					 <view style="margin-right: 12upx; margin-left: auto;" @click="editSku(item, index)">编辑</view>
+					
+				</view>
+					
+			</view>
+			
+			
+			
+			<view style="display: flex; justify-content: flex-end;">
+				<text @click="submitEdit" class="font-icon bg-hdsh" style="font-size: 32upx; color: #fff; border-radius: 50%; padding: 12upx;">&#xe698;</text>
+			</view>
+			
+			<uni-popup class="sku_edit" ref="sku_edit" type="center">
+				<view style="text-align: center; font-size: 28upx; color: #bbb; margin-bottom: 24upx;">编辑规格</view>
+				<view style="display: flex; margin-bottom: 20upx">
+					<text style="width: 30%; text-align: right;">规格名称：</text>
+					<input style="border-radius: 4px;
+						height: 52upx;
+						background-color: #eee;
+						border: 1px solid #ccc;
+						font-size: 14px;
+						padding: 0px 8px;
+						width: 70%;" type="text" v-model="editSkuItem.name" />
+				</view>
+				<view style="display: flex; margin-bottom: 20upx">
+					<text style="width: 30%; text-align: right;">库存：</text>
+					<input style="border-radius: 4px;
+						height: 52upx;
+						background-color: #eee;
+						border: 1px solid #ccc;
+						font-size: 14px;
+						padding: 0px 8px;
+						width: 70%;" type="text" v-model="editSkuItem.kw2" />
+				</view>
+				
+				<view style="background-color: #EB544D; padding: 8upx 0upx; border-radius: 8upx; width: 20%; color: #fff; text-align: center;" @tap="submitSkuEdit">保存</view>
+			</uni-popup>
+			
 		</uni-popup>
 		
-		<view @click="cancel" class="shop-cart-shadow" v-show="shopCartShow === true" ></view>
-		<view class="bottom-pop" :class="{ 'show': shopCartShow === true  }">
-			<shopCartModel />
-		</view>
+		
+		<orderList v-if="selTab === 1" />
+		<delivePerson v-if="selTab === 2" />
+		
 		
 	</view>
 </template>
 
 <script>
-	import { mapGetters, mapState, mapActions } from 'vuex';
+	import { mapGetters, mapActions, mapState } from 'vuex';
+	import lrz from 'lrz'
 	
-	import shopCartBtn from '@/components/shop-cart-btn.vue'
-	import shopCartModel from '@/components/shop-cart-model.vue'
-	
+	import orderList from './order.vue'
+	import delivePerson from './delivePerson.vue'
 	
 	export default {
 		components: {
-			shopCartBtn,
-			shopCartModel
+			orderList,
+			delivePerson
 		},
+		
 		data() {
 			return {
 				shopCartShow: false,
@@ -178,9 +238,6 @@
 				
 				shopMark: false, //判断是否需要置空列表： true-置空，false-不置空
 				
-				timeout: '', //定时器
-				topSort: '购', //顶部类型的显示内容
-				topSortList: ["购", "游", "宿", "食"], //海岛生活配置,顶部类型列表的可选内容
 				// topSortList: [ "游", "购","宿", "食"],  //清溪商城配置
 				topSortIndex: 0, //被选中顶部类型列表的下标
 				topSortClicked: false, //判断顶部类型列表是否显示
@@ -193,9 +250,7 @@
 				sku: [],
 				spuItem: {},
 				
-				selectSku: {
-					photo: []
-				}, // 选择到的规格
+				selectSku: {}, // 选择到的规格
 				skuNumber: 1 ,// 规格数量
 				
 				pageNumber: 1,
@@ -204,38 +259,35 @@
 				labels: [],
 				labelsTow: [],
 				
+				editSkuItem: {},
 				
-				box: ''
+				box: '',
+				deleteButton: false,
+				
+				selTab: 0
 			};
 		},
 		
 		computed: {
 			...mapState({
 			    unit_data: state => state.zhsq.unit_data
-			}),
+			})
 		},
 		
 		/**
-		 * @param {Object} 
-		 * 	obj obj.kw-搜索关键词，
-		 * 	obj.ob-商品排序方式，
-		 * 	obj.id-当前要展示哪种类型的产品
+		 * @param {Object} obj obj.kw-搜索关键词，obj.ob-商品排序方式，obj.id-当前要展示哪种类型的产品
 		 */
 		onLoad(obj) {
-			uni.showLoading({
-				mask: true
-			})
-			
-			Promise.all([this.fetchShopList(), this.fetchLabels()]).then((values) => {
-				uni.hideLoading()
-			}).catch(err => {
-				console.log(err)
-				uni.hideLoading()
-			})
-			
 			uni.setNavigationBarTitle({
 				title: this.unit_data.name
 			})
+			
+			
+			this.selTab = obj.status / 1
+			
+			if(this.selTab === 0) {
+				this.fetchShopList()
+			}
 		},
 		
 		
@@ -260,21 +312,115 @@
 			...mapActions({
 			    getCartList: "getCartList"
 			}),
-			
 			scroll() {
 				if(this.$refs.viewBox.$el.scrollTop === this.$refs.viewBox.$el.scrollHeight - this.$refs.viewBox.$el.offsetHeight) {
 					this.pageNumber++
 					this.fetchShopList('', 'pageAdd')
 				}
-				// console.log(this.$refs.viewBox.$el.scrollTop)
-				// console.log(this.$refs.viewBox.$el.clientHeight)
+			},
+			
+			submitSkuEdit() { // 提交规格编辑
+				uni.showLoading()
+				this.$base.szblPut('/api/skus/' + this.editSkuItem.id +
+					'?m=' + this.$userMsg.userid +
+					'&tk=' + this.$userMsg.token + 
+					'&state=' + this.$base.getState() +
+					'&appid=' + this.$DEVELOPER.szblid, {
+						name: this.editSkuItem.name,
+						kw2: this.editSkuItem.kw2,
+						appid: this.$DEVELOPER.szblid,
+						querykeyword: this.editSkuItem.name + ',' + this.spuItem.name,
+						id: this.editSkuItem.id
+					}
+				).then(res => {
+					uni.showToast({
+						title: '修改成功'
+					})
+					this.editItem(this.spuItem)
+					this.$refs.sku_edit.close()
+					uni.hideLoading()
+				}).catch(err => {
+					uni.showToast({
+						title: err
+					})
+					uni.hideLoading()
+					console.log(err)
+				})
+			},
+			
+			// 编辑规格
+			editSku(item ,index) {
+				uni.showLoading()
+				let res = JSON.parse(JSON.stringify(item)) 
+				this.editSkuItem = res
+				this.$refs.sku_edit.open()
+				uni.hideLoading()
+			},
+			
+			onUploadPhoto() {
+				uni.chooseImage({
+				    count: 1,
+				    sizeType: ['original', 'compressed'],
+				    sourceType: ['album'],
+				    success: (res) => {
+				        // 预览图片
+						lrz(res.tempFilePaths[0], {
+							width: 750,
+							quality: 0.8
+						}).then((rst) => {
+							let tempPhoto = {
+								photo: '',
+								len: ''
+							};
+							
+							tempPhoto.photo = rst.base64;
+							tempPhoto.len = rst.base64Len;
+							
+							uni.showToast({
+								icon: 'loading',
+								mask: true,
+								duration: 50000
+							});
+							
+							return this.$base.szblPost(
+								"/api/media/img" +
+								"?u=" + this.$userMsg.userid +
+								"&tk=" + this.$userMsg.token +
+								"&state=" + this.$base.getState(), [tempPhoto]
+							)
+						}).then((res) => {
+							let r = this.$base.strResToJson(res.data)
+							this.spuItem.photo.push(r[0])
+							uni.hideToast()
+						}).catch((err) => {
+							console.log(err);
+							return;
+						});
+						
+				    }
+				});
+			},
+			
+			deleteImg(item, index) {
+				uni.showModal({
+					title: '',
+					content: '您确定删除此证件照吗?',
+					showCancel: true,
+					cancelText: '取消',
+					confirmText: '确定',
+					confirmColor: this.$PROP.hdsh_color,
+					success: res => {
+						if (res.confirm) {
+							this.spuItem.photo.splice(index, 1)
+						}
+						if (res.cancel) {
+							return
+						}
+					}
+				})
 			},
 			
 			selectLabelTow(item, index) {
-				uni.showLoading({
-					title: '',
-					mask: true
-				})
 				this.selSecond = index
 				let obj = {
 					"m": this.$DEVELOPER.szblid,
@@ -283,13 +429,12 @@
 					"pnum": 1,
 					"psize": 99,
 					"status": '2',
+					"cid": item.id,
 					"querykeyword": '',
 					"appid": this.$DEVELOPER.szblid,
 					"rpflag": this.$DEVELOPER.cid,
-					"orderby_sticktop": "d_d",
-					"orderby_createtime": "d_d",
-					// "areacode": this.$areaMsg.id,
-					"labelid": item.id,
+					"areacode": this.$areaMsg.id,
+					"labelid": '1009001',
 					"unit": this.unit_data.id
 				}
 				
@@ -297,82 +442,44 @@
 					
 					if(res.data === null) { // 如果没有结果
 						this.list = []
-						
-						uni.hideLoading()
 						return
-					} else {
-						let r = this.$base.strResToJson(res.data)
-						this.list = r
-						this.serverPage = res.pages
-						
-						uni.hideLoading()
 					}
-				}).catch(err => {
-					console.log(err)
-					uni.hideLoading()
+					
+					let r = this.$base.strResToJson(res.data)
+					this.list = r
+					
+					this.serverPage = res.pages
+					
 				})
 			},
 			
-			cancel() {
-				this.shopCartShow = false
-				
-				let body = document.getElementsByTagName('body')[0]
-				
-				body.style.position = ''
-				body.style.overflow = ''
-				
-				let top = body.style.top
-				
-				document.body.scrollTop = document.documentElement.scrollTop = -parseInt(top)
-				
-				body.style.top = ''
-				
-				uni.showTabBar({
-					animation: true
-				})
+			changeStatus(e) {
+				this.spuItem.status = e.detail.value
 			},
 			
 			// 获取分类
 			fetchLabels() {
-				return new Promise((resolve, reject) => {
-					this.$base.szblGet('/api/labels', {
-						m: this.$DEVELOPER.szblid,
-						tk: this.$DEVELOPER.token,
-						state: this.$base.getState(),
-						pnum: '0',
-						psize: '0',
-						fid: '2',
-						gid: '1016',
-					}).then(res => {
-						this.labels = this.$base.strResToJson(res.data)
-						
-						this.labels.unshift({
-							id: "",
-							name: "全部",
-							
-						})
-						
-						this.selectLabel(this.labels[0], 0)
-						
-						resolve()
-					}).catch(err => {
-						console.log(err)
-						reject()
-					})
+				
+				this.$base.szblGet('/api/labels', {
+					m: this.$DEVELOPER.szblid,
+					tk: this.$DEVELOPER.token,
+					state: this.$base.getState(),
+					pnum: '0',
+					psize: '0',
+					fid: '2',
+					gid: '1016',
+				}).then(res => {
+					this.labels = this.$base.strResToJson(res.data)
+					
+					this.selectLabel(this.labels[0], 0)
+
+				}).catch(err => {
+					console.log(err)
 				})
-				
-				
 			},
 			
 			selectLabel(item, index) {
 				this.selFirst = index
-				
-				if(item.id === "") {
-					this.labelsTow = []
-					this.fetchShopList('')
-					return
-				}
-				
 				this.$base.szblGet('/api/labels', {
 					m: this.$DEVELOPER.szblid,
 					tk: this.$DEVELOPER.token,
@@ -383,13 +490,6 @@
 					gid: item.id,
 				}).then(res => {
 					this.labelsTow = this.$base.strResToJson(res.data)
-					
-					this.labelsTow.unshift({
-						id: item.id,
-						name: `全部${item.name}`
-					})
-					
-					this.selectLabelTow(this.labelsTow[0], 0)
 				}).catch(err => {
 					console.log(err)
 				})
@@ -415,124 +515,29 @@
 				this.skuNumber = e
 			},
 			
-			// 添加进入购物车
-			addCart() {
-				
-				if (this.$userMsg.userid == null) { // 判断是否已登录
-					this.$store.commit('set_page_data', {
-						page: '/pages/tabBar/index/index',
-					})
-					uni.navigateTo({
-						url: '/pages/component/login/login?m=null'
-					});
-				}
-				
-				if(JSON.stringify(this.selectSku) === '{}') {
+			// 提交编辑
+			submitEdit() {				
+				this.$base.szblPut('/api/spus/' + this.spuItem.id +
+					'?m=' + this.$userMsg.userid +
+					'&tk=' + this.$userMsg.token + 
+					'&state=' + this.$base.getState() +
+					'&appid=' + this.$DEVELOPER.szblid, this.spuItem
+				).then(res => {
 					uni.showToast({
-						mask: false,
-						duration: 1500,
-						title: '请选择规格！',
-						icon: 'none'
+						title: '修改成功'
 					})
-					return
-				}
-				
-				
-				let cartJson = {
-					name: this.spuItem.name, //商品名
-					fid: this.selectSku.id, //规格id
-					cid: this.spuItem.id, //商品id
-					kw0: this.selectSku.name, // 规格名称
-					kw1: this.skuNumber, // 数量
-					kw2: this.selectSku.kw0, // 加入购物车时规格的价钱
-					photo: `["${this.selectSku.photo[0]}"]`, // 图片
-					createuserid: this.$userMsg.userid, //用户id
-					rpflag: this.$DEVELOPER.cid,
-					appid: this.$DEVELOPER.szblid,
-					areacode: this.$areaMsg.id,
-					areaname: this.$areaMsg.name,
-					labelid: '1014002',
-					unit: this.unit_data.id
-				}
-				
-				this.$base.szblGet('/api/carts', {
-					m: this.$userMsg.userid,
-					tk: this.$userMsg.token,
-					pnum: 1,
-					psize: 99,
-					state: this.$base.getState(),
-					createuserid: this.$userMsg.userid,
-					rpflag: this.$DEVELOPER.cid,
-					appid: this.$DEVELOPER.szblid,
-					areacode: this.$areaMsg.id,
-					labelid: '1014002'
-				}).then(res => {
-					if(res.data !== null) {
-						let cartList = this.$base.strResToJson(res.data)
-						
-						for(let i = 0; i < cartList.length; i++) {
-							if(cartList[i].fid === this.selectSku.id) {
-								
-								cartList[i].kw1 = parseInt(cartList[i].kw1) + this.skuNumber
-								
-								// 发送修改购物车数量接口
-								this.$base.szblPut(`/api/carts/${cartList[i].id}
-									?m=${this.$userMsg.userid}
-									&tk=${this.$userMsg.token}
-									&state=${this.$base.getState()}
-									&appid=${this.$DEVELOPER.szblid}`, cartList[i]
-								).then(
-									res => {
-										uni.showToast({
-											icon: 'none',
-											mask: false,
-											title: '添加成功！'
-										});
-										this.getCartList()
-										this.$refs.sku_pop.close()
-									err => {
-										console.log(err)
-									}
-								})
-								return
-							}
-						}
-						
-						this.$base.szblPost(
-							"/api/carts?m=" + this.$userMsg.userid + 
-							"&tk=" + this.$userMsg.token + 
-							"&state=" + this.$base.getState(), cartJson
-						).then(res => {
-							uni.showToast({
-								icon: 'none',
-								mask: false,
-								title: '添加成功！'
-							});
-							this.getCartList()
-							this.$refs.sku_pop.close()
-						})
-					} else {
-						this.$base.szblPost(
-							"/api/carts?m=" + this.$userMsg.userid + 
-							"&tk=" + this.$userMsg.token + 
-							"&state=" + this.$base.getState(), cartJson
-						).then(res => {
-							uni.showToast({
-								icon: 'none',
-								mask: false,
-								title: '添加成功！'
-							});
-							this.getCartList()
-							this.$refs.sku_pop.close()
-						})
-					}
+					this.fetchShopList()
+					this.$refs.sku_pop.close()
 				}).catch(err => {
-					console.log(err, '请求错误')
+					uni.showToast({
+						title: err
+					})
+					console.log(err)
 				})
 			},
 			
-			add_cart(item) {
-				this.spuItem = item
+			editItem(item) {
+				this.spuItem = this.$base.strResToJson(JSON.stringify(item))
 				this.$base.szblGet("/api/skus", {
 					m: this.$DEVELOPER.szblid,
 					tk: this.$DEVELOPER.token,
@@ -548,7 +553,6 @@
 						this.sku = null
 					} else {
 						this.sku = this.$base.strResToJson(res.data)
-						this.selectSku = this.sku[0]
 					}
 					this.$refs.sku_pop.open()
 				})
@@ -565,61 +569,64 @@
 			},
 			
 			fetchShopList(kw, str) {
-				return new Promise((resolve, reject) => {
-					if(str === 'pageAdd' && this.serverPage < this.pageNumber) {
-						uni.showToast({
-							title: '到底啦~',
-							icon: 'none'
-						})
+				uni.showLoading()
+				if(str === 'pageAdd' && this.serverPage < this.pageNumber) {
+					uni.showToast({
+						title: '到底啦~',
+						icon: 'none'
+					})
+					return
+				}
+				
+				if(kw === null) {
+					this.kw = ''
+				}
+				
+				let obj = {
+					"m": this.$userMsg.userid,
+					"tk": this.$userMsg.token,
+					"state": this.$base.getState(),
+					"pnum": 1,
+					"psize": 99,
+					// "status": '',
+					"querykeyword": this.kw,
+					"appid": this.$DEVELOPER.szblid,
+					"rpflag": this.$DEVELOPER.cid,
+					"areacode": this.$areaMsg.id,
+					"orderby_sticktop": "d_d",
+					"orderby_createtime": "d_d",
+					// "labelid": '1009001',
+					"unit": this.unit_data.id
+				}
+				
+				this.$base.szblGet('/api/spus?', obj).then(res => {
+					if(res.data === null) { // 如果没有结果
+						this.list = []
 						return
 					}
 					
-					if(kw === null) {
-						this.kw = ''
+					let r = this.$base.strResToJson(res.data)
+					
+					if(str === 'pageAdd') {
+						r.map(item => {
+							this.list.push(item)
+						})
+					} else {
+						this.list = r
 					}
 					
-					
-					
-					let obj = {
-						"m": this.$DEVELOPER.szblid,
-						"tk": this.$DEVELOPER.token,
-						"state": this.$base.getState(),
-						"pnum": 1,
-						"psize": 99,
-						"status": '2',
-						"querykeyword": this.kw,
-						"appid": this.$DEVELOPER.szblid,
-						"rpflag": this.$DEVELOPER.cid,
-						"orderby_sticktop": "d_d",
-						"orderby_createtime": "d_d",
-						// "areacode": this.$areaMsg.id,
-						// "labelid": '1009001',
-						"unit": this.unit_data.id
+					if(kw !== null) { // 显示删除键
+						this.deleteButton = true
+					} else if (kw === null) {
+						this.deleteButton = false
 					}
 					
-					this.$base.szblGet('/api/spus?', obj).then(res => {
-						if(res.data === null) { // 如果没有结果
-							this.list = []
-							return
-						}
-						
-						let r = this.$base.strResToJson(res.data)
-						
-						if(str === 'pageAdd') {
-							r.map(item => {
-								this.list.push(item)
-							})
-						} else {
-							this.list = r
-						}
-						
-						
-						this.serverPage = res.pages
-						
-						resolve()
-					}).catch(err => {
-						console.log(err)
-					})
+					this.serverPage = res.pages
+					
+					uni.hideLoading()
+				}).catch(err => {
+					uni.hideLoading()
+					console.log(err)
 				})
 			},
 			
@@ -633,7 +640,7 @@
 	}
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 	@keyframes placeHolderShimmer {
 		0% {
 		    background-position: -468px 0
@@ -742,6 +749,10 @@
 		height: 160upx;
 	}
 
+	.product-list {
+		// padding-top: 80upx;
+	}
+	
 	.product-list .top-wrap {
 		/* #ifndef MP-WEIXIN */
 		position: fixed;
@@ -845,7 +856,6 @@
 	}
 
 	.list-wrap {
-		padding-top: 80upx;
 		display: flex;
 	}
 	
@@ -1028,7 +1038,7 @@
 	}
 	
 	.new-list {
-		width: 80%;
+		width: 100%;
 	}
 	
 	.new-list > .second-menu {
@@ -1067,7 +1077,6 @@
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: space-around;
-		height: 87vh;
 		overflow-y: auto;
 		padding-bottom: 40px;
 	}
@@ -1084,7 +1093,7 @@
 	}
 	
 	.new-item {
-		width: 45%;
+		width: 30%;
 		height: fit-content;
 		border-radius: 10upx;
 		box-shadow: 0upx 20upx 28upx #eee;
@@ -1108,7 +1117,7 @@
 	}
 	
 	.item-bottom .name {
-		height: 55upx;
+		height: 68upx;
 		font-size: 20upx;
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
@@ -1134,7 +1143,7 @@
 	.item-bottom .detail .add-cart {
 		color: #eb544d;
 		margin-right: 8upx;
-		font-size: 48upx;
+		font-size: 38upx;
 	}
 	
 	.item-bottom .detail .sales {
@@ -1153,20 +1162,6 @@
 	.top-sort-item-ac {
 		background: #00a0ea;
 		color: #fff;
-	}
-	
-	.product-list .uni-popup.sku-list {
-		position: relative;
-	}
-	
-	.product-list .uni-popup.sku-list .sku-image {
-		position: absolute;
-		top: -120upx;
-		left: 20upx;
-		box-sizing: border-box;
-		border: 4upx solid #eee;
-		border-radius: 8upx;
-		box-shadow: 0upx 0upx 8upx #eee;
 	}
 	
 	.product-list .uni-popup.sku-list .uni-popup__wrapper-box .spu-name {
@@ -1193,5 +1188,137 @@
 		background-color: rgba(235, 84, 77, 0.1);
 		border: 1px solid rgba(235,84,77, 1);
 		color: rgba(235,84,77, 1);
+	}
+	
+	
+	
+	.form-item {
+		margin: 28upx 0upx;
+		> .uni-list {
+			margin-bottom: 24upx;
+			> .uni-list-cell {
+				> .uni-list-cell-left {
+					margin-left: 24upx;
+					font-size: 30upx;
+					margin-bottom: 8upx;
+				}
+				> .uni-list-cell-db {
+					background-color: #fff;
+					border-top: 2upx solid #ccc;
+					border-bottom: 2upx solid #ccc;
+					padding: 16upx 24upx;
+					font-size: 32upx;
+				}
+			}
+		}
+		> .form-label {
+			width: calc(28upx * 5); 
+			font-size: 28upx;
+			padding-left: 4upx;
+		}
+		> .form-item-input {
+			color: #333;
+			width: calc(100% - 28upx * 5 - 2upx); 
+			border: 2upx solid #e1e1e1;
+			background-color: #f6f6f6;
+			border-radius: 4px;
+			height: 60upx;
+			line-height: 60upx;
+			padding: 0upx 20upx;
+			font-size: 28upx;
+			margin-top: 8upx;
+		}
+		> .form-item-textarea {
+			border: 2upx solid #aaa;
+			width: 80%;
+		}
+		&:first-child {
+			margin: 0upx 0upx 28upx;
+		}
+		> .form-radio {
+			display: flex;
+			width: calc(100% - 28upx * 5 - 2upx);
+			height: 60upx;
+			line-height: 60upx;
+			> .radio-item {
+				display: flex;
+				margin-right: 4upx;
+				.radio-icon {
+					transform: scale(0.8);
+				}
+			}
+		}
+		> .uni-list {
+			width: calc(100% - 28upx * 5 - 2upx);
+			border: 2upx solid #e1e1e1;
+			background-color: #f6f6f6;
+			border-radius: 4px;
+			height: 60upx;
+			line-height: 60upx;
+			padding: 0upx 20upx;
+			.uni-input {
+				display: flex;
+				justify-content: space-between;
+				.font-icon {
+					font-size: 24upx;
+				}
+			}
+		}
+		
+		> .upload-wrapper {
+			margin-top: 8upx;
+			width: 100%;
+			display: flex;
+			color: #353535;
+			overflow-x: auto;
+			flex-wrap: wrap;
+			> .upload-area {
+				color: #ccc;
+				font-size: 80upx;
+				width: 160upx;
+				height: 160upx;
+				background-color: #f6f6f6;
+				border-radius: 4px;
+				border: solid 1px #e1e1e1;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				margin-bottom: 16upx;
+			}
+			
+			> .upload-item {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				margin-right: 20upx;
+				> .idcard-img {
+					position: relative;
+					width: 160upx;
+					height: 160upx;
+					background-position: center;
+					background-repeat: no-repeat;
+					background-size: cover;
+					border-radius: 4px;
+					border: solid 1px #e1e1e1;
+					margin-bottom: 8px;
+					> .delete-img{
+						position: absolute;
+						right: 0upx;
+						top: 0upx;
+						font-size: 28upx;
+						color: #fff;
+						background-color: #EE2E3A;
+						font-weight: 700;
+						width: 28upx;
+						height: 28upx;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						border-radius: 4upx;
+						line-height: initial;
+					}
+				}
+			}
+		}
 	}
 </style>

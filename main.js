@@ -19,7 +19,7 @@ Vue.prototype.$DEVELOPER = {
 	szblid: '86supgrpszbl15825121655901346766423',
 	szblsecret: '394a74c85fbdd635291f50b0d799286dc52b9022',
 	cid: '1582512245668771502918', //资源识别码rpflag
-	name: '智慧商圈',
+	name: '马铃商圈',
 	
 
 	areacode: '86', //所有操作的地域都传这个

@@ -151,7 +151,7 @@
 
 <script>
 	import {
-		mapMutations, mapActions
+		mapMutations, mapActions, mapState
 	} from "vuex";
 	import uniNumberBox from "@/components/uni-number-box/uni-number-box.vue"
 	import uParse from "@/components/gaoyia-parse/parse.vue"
@@ -211,10 +211,20 @@
 				hackReset: true, //用于强制刷新子组件的状态
 			};
 		},
+		computed: {
+			...mapState({
+			    unit_data: state => state.zhsq.unit_data
+			})
+		},
+		
 		onLoad(obj) {
 			this.loadShopDetial(obj.id);
 			
 			this.id = obj.id;
+			
+			uni.setNavigationBarTitle({
+				title: this.unit_data.name
+			})
 		},
 		methods: {
 			...mapActions({
@@ -367,6 +377,7 @@
 				}
 				this.isAddCart = bool;
 				!this.skuPup ? (this.skuPup = true) : (this.skuPup = false);
+				this.skuClick(this.sku[0], 0)
 			},
 			/**
 			 * 规格点击方法
@@ -424,6 +435,7 @@
 						areacode: this.$areaMsg.id,
 						areaname: this.$areaMsg.name,
 						labelid: '1014002',
+						unit: this.unit_data.id
 					}
 					
 					this.$base.szblGet('/api/carts', {
@@ -462,7 +474,6 @@
 											!this.skuPup ? (this.skuPup = true) : (this.skuPup = false);
 											this.getCartList()
 											
-											this.$refs.sku_pop.close()
 											uni.hideLoading()
 										err => {
 											console.log(err)

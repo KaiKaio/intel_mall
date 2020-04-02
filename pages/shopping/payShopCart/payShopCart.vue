@@ -1,5 +1,5 @@
 <template>
-	<view>
+	<view style="padding-bottom: 120upx;">
 		<ul class="address-sec" v-if="addre_list.length == 0" style="margin-top: 0;">
 			<li id="address-btn" class="address-btn" @click="toAddressList('pay')">
 				<span v-if="type"><i class="iconfont icon-bianji"></i>新建收货地址</span>
@@ -45,19 +45,19 @@
 		</view>
 
 		<view class="total-price">
-			<text>¥{{ totalPrice }}</text>
-			<text>实付金额：</text>
+			<view style="padding: 28upx 16upx;">实付金额：<text class="price-red">¥{{ totalPrice }}</text></view>
+			<view class="shopcart-pay-btn bg-hdsh" @click="paySubmit">
+				支付
+			</view>
 		</view>
 
-		<view class="shopcart-pay-btn bg-hdsh" @click="paySubmit">
-			支付
-		</view>
+		
 	</view>
 </template>
 
 <script>
 	import {
-		mapGetters, mapActions
+		mapGetters, mapActions, mapState
 	} from 'vuex'
 	export default {
 		// 优惠券检测办法：1.在前端页面对每个规格、每个优惠券进行判断，2.把下单数据先传到后台去，由后台来判断哪个优惠券可以使用，哪个不行
@@ -103,7 +103,10 @@
 			}
 		},
 		computed: {
-			...mapGetters(['get_shopcart_data', 'get_address_data'])
+			...mapGetters(['get_shopcart_data', 'get_address_data']),
+			...mapState({
+			    unit_data: state => state.zhsq.unit_data
+			})
 		},
 		watch: {
 			payment() {
@@ -118,7 +121,9 @@
 			
 		},
 		onLoad() {
-			
+			uni.setNavigationBarTitle({
+				title: this.unit_data.name
+			})
 		},
 		async onShow() {
 			this.shopList = this.get_shopcart_data.shopArr
@@ -128,11 +133,14 @@
 				await this.initAddressTem() // 查询模板
 			}
 			
-			if(this.get_address_data.changeIndex) {
-				let index = this.get_address_data.changeIndex
-				this.default_addre = this.addre_list[index]
+			
+			
+			if(this.get_address_data.changeIndex === undefined) {
+				await this.getUserAddress()
 			} else {
 				await this.getUserAddress()
+				let index = this.get_address_data.changeIndex
+				this.default_addre = this.addre_list[index]
 			}
 			
 			this.computedYunFei()
@@ -193,7 +201,7 @@
 			initAddressTem() {
 				return new Promise((resolve, reject) => {
 					uni.showLoading({
-						title: '',
+						title: '加载收货地址..',
 						mask: true
 					});
 					
@@ -203,6 +211,7 @@
 						state: this.$base.getState(),
 						appid: this.$DEVELOPER.szblid,
 						rpflag: this.$DEVELOPER.cid,
+						unit: this.unit_data.id,
 						// areacode: this.$areaMsg.id,
 						fid: '0',
 						labelid: '1006006',
@@ -257,9 +266,34 @@
 					total += new Number(this.shopList[i].kw1)
 				}
 				
-				if(total < new Number(this.YunfeiInfo.kw4)) { // 如果小于初始计数
-					this.YunFei = parseFloat(this.YunfeiInfo.kw5)
-					this.totalPrice = parseFloat(this.totalPrice) + this.YunFei
+				if(total < new Number(this.YunfeiInfo.kw4) || total === (this.YunfeiInfo.kw4 / 1)  ) { // 如果小于初始计数
+					this.YunFei = parseFloat(this.YunfeiInfo.kw5) // 初始运费
+					this.totalPrice = parseFloat(this.totalPrice) + this.YunFei // 初始总价
+					this.totalPrice = this.totalPrice.toFixed(2) // 格式化价格小数点
+					this.YunFei = this.YunFei.toFixed(2) // 展示运费格式化小数点
+				
+				} else if (total > new Number(this.YunfeiInfo.kw4)) { // 如果大于初始计数
+				
+					this.YunFei = parseFloat(this.YunfeiInfo.kw5) // 初始运费
+					
+					// console.log(this.YunFei, '=> 1')
+					
+					let addGoods = total - new Number(this.YunfeiInfo.kw4) // 总件数减去初始件数 等于 多出件数
+					
+					// console.log(addGoods, '=> addGoods2')
+					
+					let addCount = addGoods / (new Number(this.YunfeiInfo.kw6)) // 多出件数 除以 Kw6 等于 要加多少次钱
+					
+					// console.log(addCount, '=> addCount3')
+					
+					let addPrice = addCount * (new Number(this.YunfeiInfo.kw7)) // 要加多少次钱 乘以 Kw7 等于 加的总价
+					
+					// console.log(addPrice, '=> addPrice4')
+					
+					this.YunFei += addPrice
+					
+					this.totalPrice = parseFloat(this.totalPrice) + this.YunFei // 初始总价
+					
 					this.totalPrice = this.totalPrice.toFixed(2)
 					this.YunFei = this.YunFei.toFixed(2)
 				}
@@ -278,6 +312,11 @@
 					})
 					return false;
 				}
+				
+				uni.showLoading({
+					title: '正在调起支付',
+					mask: true
+				})
 				
 				let _this = this
 				let delayTime = 1500
@@ -300,18 +339,19 @@
 					"kw4": this.$base.getRSAEncryptStr(parseFloat(this.totalPrice) * 100), //总金额
 					"kw9": this.$base.getRSAEncryptStr(parseFloat(this.YunFei) * 100), // 运费
 					"payremarks": this.$DEVELOPER.name + "商品消费订单",
-					// "areacode": this.get_pay_data.areacode,
-					// "areaname": this.get_pay_data.areaname,
 					"address": this.default_addre.areadetail + this.default_addre.address,
-					"labelid": '1011004',
 					"appid": this.$DEVELOPER.szblid,
 					"querykeyword": '', //快速搜索
 					"rpflag": this.$DEVELOPER.cid,
+					"unit": this.unit_data.id,
+					// "labelid": '1011004',
+					"labelid": '',
 					"jsondata": '' // 后续拼接JSONDATA
 				}
 				
 				
 				let jsonArr = []
+				let labelID = ''
 				this.shopList.map(item => {
 					jsonArr.push({
 						name: item.name,//商品名称
@@ -322,6 +362,8 @@
 						kw2: item.kw2,//商品总价
 						photo: item.photo[0]//商品图片
 					})
+					
+					labelID += item.gid + ',' // 拼接商品LabelID
 				})
 				
 				let jsondata = {
@@ -333,6 +375,7 @@
 				
 				jsondata.splb = jsonArr
 				order_msg.jsondata = jsondata
+				order_msg.labelid = labelID
 				
 				let strOrder = this.$base.jsonResToStr(order_msg)
 				
@@ -391,11 +434,14 @@
 						title: '付款成功',
 						duration: 1500
 					})
+					
+					uni.hideLoading()
 				}).then(res => {
 					uni.reLaunch({
 						url:'/pages/tabBar/member/member'
 					})
 				}).catch(err => {
+					uni.hideLoading()
 					console.log(err)
 					uni.showToast({
 						icon: 'none',
@@ -498,31 +544,27 @@
 	}
 
 	.total-price {
-		padding: 20upx;
 		background: #fff;
 		margin-top: 10upx;
-		overflow: hidden;
+		display: flex;
+		justify-content: space-between;
+		position: absolute;
+		bottom: 0px;
+		width: 100%;
 	}
-
-	.total-price text {
-		float: right;
+	
+	.shopcart-pay-btn {
+		color: #fff;
+		justify-content: center;
+		align-items: center;
+		display: flex;
+		font-size: 32upx;
+		padding: 0upx 100upx;
 	}
-
-	.total-price text:first-child {
+	
+	.total-price .price-red {
 		color: #d81e06;
 	}
 
-	.shopcart-pay-btn {
-		position: absolute;
-		width: 530upx;
-		height: 60upx;
-		line-height: 60upx;
-		/* background: #00a0ea; */
-		color: #fff;
-		text-align: center;
-		margin: 16upx auto 54upx;
-		left: 0;
-		right: 0;
-		border-radius: 10upx;
-	}
+	
 </style>

@@ -9,7 +9,7 @@
 			<checkbox-group ref="checkUl" @change="checkboxChange" v-show="$store.state.zhsq.shopCartList.length > 0">
 				<view class="list-item" v-for="(item, index) in $store.state.zhsq.shopCartList" :key="item.id">
 					<label class="list-label"></label>
-					<checkbox class="check-item" color="#fff" :value="index.toString()" style="width: 44upx; height: 44upx;" />
+					<checkbox :checked="item.checkBox" :value="index.toString()" class="check-item" color="#fff" style="width: 44upx; height: 44upx;" />
 					<image class="item-image" :src="$base.urlPrex + item.photo[0]" mode=""></image>
 					<view class="item-info">
 						<view style="display: flex; justify-content: space-between;"><view>{{ item.name }}</view><view class="delete-btn font-icon" @click="delItem(item, index)">&#xe67a;</view></view>
@@ -22,8 +22,16 @@
 				</view>
 			</checkbox-group>
 			
-			<view v-show="JSON.stringify($store.state.zhsq.shopCartList) === '{}' || $store.state.zhsq.shopCartList.length === 0">
-				<p style="text-align: center;">购物车还没有商品，快去选购吧~</p>
+			<view style="color: #8d8d8d; 
+				height: 80%; 
+				display: flex; 
+				align-items: center;
+				flex-direction: column; 
+				justify-content: center;" v-show="JSON.stringify($store.state.zhsq.shopCartList) === '{}' || $store.state.zhsq.shopCartList.length === 0">
+				<view style="display: flex; justify-content: center; margin-bottom: 24upx;">
+					<text class="font-icon" style="font-size: 92upx;">&#xe659;</text>
+				</view>
+				<p style="text-align: center; font-size: 32upx;">购物车还没有商品，快去选购吧~</p>
 			</view>
 		</view>
 		
@@ -33,7 +41,7 @@
 			 	<text>全选</text>
 			</view>
 			<view class="right">
-				<view>合计: <text style="color: #eb544d;">￥{{ totalPrice }}</text></view>
+				<view>合计: <text style="color: #eb544d;">￥{{ $store.state.zhsq.totalPrice.toFixed(2) }}</text></view>
 				<view class="pay bg-hdsh" @click="pay">结&nbsp;算</view>
 			</view>
 		</view>
@@ -42,7 +50,8 @@
 </template>
 
 <script>
-	import { mapState, mapGetters, mapActions } from 'vuex';
+	import { mapActions } from 'vuex';
+	// import { mapState, mapGetters, mapActions } from 'vuex';
 	
 	import uniNumberBox from "@/components/uni-number-box/uni-number-box.vue"
 	import uniPopup from "@/components/uni-popup/uni-popup.vue"
@@ -52,14 +61,6 @@
 		components: {
 			uniNumberBox,
 			uniPopup
-		},
-		
-		computed: {
-			...mapState({
-				zhsq: state => state.zhsq
-			}),
-			
-			...mapGetters(['get_shopCartList'])
 		},
 		
 		data() {
@@ -75,109 +76,108 @@
 				empty: false // 购物车是否为空
 			}
 		},
-		
-		
-		
 		created() {
 		},
 		mounted() {
-			
 		},
-		onReachBottom() {
-			// this.getListObj.pnum++
-			// if (this.getListObj.pnum > this.pageNum) {
-			// 	return
-			// } else {
-			// 	this.getList('rb')
-			// }
+		updated() {
+			// 判断全选反选
+			
+			let flag = true // 该变量只要变成 false , 则显示全选状态
+			
+			for(let i = 0; i < this.$store.state.zhsq.shopCartList.length; i++) {
+				if(this.$store.state.zhsq.shopCartList[i].checkBox === false) { // 如果有一个Check为False，则全选为False
+					this.selectAllFlag = false
+					flag = false
+				}
+			}
+			
+			if(flag === true) {
+				this.selectAllFlag = true
+			}
+			
+			this.$store.commit('computedTotalPrice', '') // 计算价格
 		},
 		computed: {
 			
 		},
 		watch: {
-			//刷新list的时候检查全选按钮的状态
-			// shopList: function() {
-				
-			// }
 		},
 		methods: {
 			...mapActions({
 			    getCartList: "getCartList"
 			}),
 			
+			// 选择商品 Checkbox
 			checkboxChange(e) {
+				let selectArrIndex = e.detail.value// 已经选中数组
 				
-				let selectArrIndex = e.detail.value// 已经选中的商品坐标号
-				
-				let selectArr = []
-				for(let i = 0; i < selectArrIndex.length; i++) {
-					let index = parseInt(selectArrIndex[i]) // 格式化已选中商品的下标 ('1' => 1)
-					selectArr.push(this.$store.state.zhsq.shopCartList[index])
-				}
-				
-				this.selectArr = selectArr
-				
-				this.computedPrice()
-				
-				// 判断全选反选
-				if(e.detail.value.length === this.$store.state.zhsq.shopCartList.length) {
-					this.selectAllFlag = true
-				} else {
-					this.selectAllFlag = false
-				}
-				
+				this.$store.commit('checkChange', selectArrIndex) // 改变Check
+				this.$store.commit('computedTotalPrice', '') // 计算价格
 			},
 			
+			// 全选按钮点击
 			selectAll() {
 				this.selectAllFlag = !this.selectAllFlag
-				if(this.selectAllFlag === true) {
-					this.$refs.checkUl.checkboxList.map(item => {
-						item.checkboxChecked = true
-						this.selectArr = this.$store.state.zhsq.shopCartList
-						
-					})
-				} else {
-					this.$refs.checkUl.checkboxList.map(item => {
-						item.checkboxChecked = false
-						this.selectArr = []
-					})
+				
+				
+				if(this.selectAllFlag === true) { // 如果需要全选，则将全部数组派发
+					let length = this.$store.state.zhsq.shopCartList.length
+					let arr = []
+					for(let i = 0; i < length; i++) {
+						arr.push(i.toString())
+					}
+					this.$store.commit('checkChange', arr) // 改变Check
+				} else if (this.selectAllFlag === false) { // 如果反选，传空数组
+					this.$store.commit('checkChange', [])
 				}
-				this.computedPrice()
+				this.$store.commit('computedTotalPrice', '') // 计算价格
 			},
 			
+			// 点击结算（支付）按钮
 			pay() {
-				if(JSON.stringify(this.$store.state.zhsq.shopCartList) === '{}' || this.selectArr.length === 0) {
+				// 判断购物车是否为空
+				if(JSON.stringify(this.$store.state.zhsq.shopCartList) === '{}') {
 					uni.showToast({
-						title: '请先选择商品',
+						title: '购物车为空..',
+						icon: 'none'
+					})
+					return
+				}
+				
+				let checkArr = [] // 选中商品数组
+				let emptyFlag = false // 判断是否无选中商品标记 `false 为空`
+				for(let i = 0; i < this.$store.state.zhsq.shopCartList.length; i++) { // 选出Check的 `Item`
+					if(this.$store.state.zhsq.shopCartList[i].checkBox === true) {
+						checkArr.push(this.$store.state.zhsq.shopCartList[i])
+						emptyFlag = true
+					}
+				}
+				
+				if(emptyFlag === false) {
+					uni.showToast({
+						title: '未选中商品..',
 						icon: 'none'
 					})
 					return
 				}
 				
 				this.$parent.$parent.$parent.cancel()
+				
 				this.$store.commit('set_shopcart_data', {
-					shopArr: this.selectArr,
-					price: this.totalPrice
+					shopArr: checkArr,
+					price: this.$store.state.zhsq.totalPrice
 				});
 				uni.navigateTo({
 					url: '/pages/shopping/payShopCart/payShopCart'
 				})
 			},
 			
+			// 更改购物车数量
 			changeNumber(e, item, index) {
-				// 先判断是否已经选中
-				let flag = false
-				for(let i = 0; i < this.selectArr.length; i++) {
-					if(item.id === this.selectArr[i].id) {
-						this.selectArr[i].kw1 = e
-						this.computedPrice()
-						break
-					}
-				}
+				this.$store.commit('changeNumber', { number: e, id: item.id })
 				
-				// this.shopList[index].kw1 = e
-				this.$store.state.zhsq.shopCartList[index].kw1 = e
-				
+				this.computedPrice()
 				
 				if(this.throttleFlag === false) {
 					console.log('节流了')
@@ -203,6 +203,7 @@
 				}, 1500)
 			},
 			
+			// 关闭购物车模块
 			cancel() {
 				this.$parent.$parent.$parent.shopCartShow = false
 				
@@ -222,20 +223,12 @@
 				})
 			},
 			
-			computedPrice() {
-				let totalPrice = 0
-				for(let i = 0; i < this.selectArr.length; i++) {
-					let kw1 = new Number(this.selectArr[i].kw1)
-					let kw2 = new Number(this.selectArr[i].kw2)
-					let total = new Number(kw1 * kw2)
-					totalPrice += total
-				}
-				totalPrice = totalPrice.toFixed(2)
-				this.totalPrice = totalPrice
-			},
+			// 计算价格函数
+			computedPrice() {},
 			
 			// 删除购物车项目
 			delItem(item, index) {
+				
 				uni.showModal({
 				    title: '提示',
 				    content: '确定删除此记录吗？',
@@ -246,8 +239,10 @@
 								&tk=${this.$userMsg.token}
 								&state=${this.$base.getState()}`, item
 							).then(res => {
-								console.log(res, '删除信息')
-								this.getCartList()
+								
+								this.$store.commit('del_shopCart_data', item.id)
+								this.$store.commit('computedTotalPrice', '') // 计算价格
+								
 							}).catch(err => {
 								console.log(err, '删除出现错误')
 							})

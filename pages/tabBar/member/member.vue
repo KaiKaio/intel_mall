@@ -1,8 +1,14 @@
 <template>
 	<!-- 我的 -->
 	<view>
-		<view class="member" @click="isLogin('my')">
-			<view class="member-pic">
+		<view class="member">
+			<view class="role-wrapper">
+				<view class="role-item" v-if="loginFlag === true">消费者</view>
+				<view class="role-item" v-if="delevePersonShow === true">配送员</view>
+				<view class="role-item" v-if="shopRoleShow === true">店家</view>
+			</view>
+			
+			<view class="member-pic" @click="isLogin('my')">
 				<image v-if="loginFlag === true && wxAvatar === false" :src="$base.urlPrex + userDetail.kw16" mode="aspectFit" />
 				</image>
 				<image v-if="loginFlag === true && wxAvatar === true" :src="userDetail.kw16" mode="aspectFit" />
@@ -14,14 +20,14 @@
 			<view class="member-name" v-else>请登录</view>
 			
 			<view class="member-info" v-if="loginFlag">
-				<view v-if="userDetail.kw15 !== ''"><text class="font-icon">&#xe6c2;</text> 生日：{{ userDetail.kw15.substring(5, userDetail.kw15.length) }}</view>
+				<view v-if="userDetail.kw15 !== ''"><text class="font-icon">&#xe6c2;</text> 生日：{{ userDetail.kw15 ? userDetail.kw15.substring(5, userDetail.kw15.length) : '' }}</view>
 				<view v-else><text class="font-icon">&#xe6c2;</text>生日：暂无</view>
 				<view  v-if="userDetail.kw3 !== ''"><text class="font-icon">&#xe664;</text>性别：{{ userDetail.kw3 }}</view>
 				<view v-else><text class="font-icon">&#xe664;</text>性别：暂无</view>
 			</view>
 		</view>
 		
-		<view class="kuai" style="margin-top: 16upx;" @click="isLogin('order', {}, '')">
+		<!-- <view class="kuai" style="margin-top: 16upx;" @click="isLogin('order', {}, '')">
 			<h2 class="memtit" style="display: flex; justify-content: space-between; border-bottom: 0upx;">
 				<text>我的订单</text>
 				<text style="color: #a9a9a9; font-size: 24upx;">
@@ -30,9 +36,10 @@
 				</text>
 				
 			</h2>
-		</view>
+		</view> -->
 		
 		<view class="kuai icon" style="margin-top: 16upx;">
+			<h3 class="title">我的订单</h3>
 			<view @click="isLogin('order', {}, 0)">
 				<text class="font-icon">&#xe678;</text>
 				<text>已下单</text>
@@ -44,32 +51,67 @@
 			<view @click="isLogin('order', {}, 2)">
 				<text class="font-icon">&#xe703;</text>
 				<text>已派送</text>
-				
 			</view>
-			<!-- <view @click="isLogin('order', {}, 0)">
-				<text class="font-icon">&#xe677;</text>
-				<text>已送达</text>
-			</view> -->
 			<view @click="isLogin('order', {}, 4)">
 				<text class="font-icon">&#xe679;</text>
 				<text>已完成</text>
 			</view>
 		</view>
 		
-		<view class="kuai icon" style="margin-top: 16upx; justify-content: flex-start;">
-			<view style="margin-right: 60upx" v-if="loginFlag" @click="toShopCart">
+		<view class="kuai icon" style="flex-wrap: wrap;">
+			<h3 class="title">我的管理</h3>
+			
+			<view v-if="loginFlag" @click="toShopCart">
 				<text class="font-icon">&#xe66c;</text>
 				<text>购物车</text>
 			</view>
-			<view style="margin-right: 60upx" @click="isLogin('address')">
+			
+			<view @click="isLogin('address')">
 				<text class="font-icon">&#xe69a;</text>
 				<text>收货地址</text>
-			</view>
-			<view style="margin-right: 60upx" v-if="loginFlag" @click="logout">
+			</view>	
+			
+			<view v-if="loginFlag" @click="logout">
 				<text class="font-icon">&#xe675;</text>
 				<text>退出登录</text>
-				
 			</view>
+			
+		</view>
+		
+		
+		<view class="kuai icon" style="flex-wrap: wrap;"  v-if="loginFlag && delevePersonShow === true">
+			<h3 class="title">配送管理</h3>
+			<view @click="isLogin('Delivery')">
+				<text class="font-icon">&#xe680;</text>
+				<text>配送管理</text>
+			</view>
+			
+			<view @click="delPersonDelive">
+				<text class="font-icon">&#xe67f;</text>
+				<text>解除配送</text>
+			</view>
+			
+		</view>
+		
+		<view class="kuai icon" style="flex-wrap: wrap;"  v-if="loginFlag && shopRoleShow === true">
+			<h3 class="title">店铺管理</h3>
+			
+			<view @click="isLogin('shop', '', '0')">
+				<text class="font-icon">&#xe682;</text>
+				<text>商品管理</text>
+			</view>
+			
+			<view @click="isLogin('shop', '', '1')">
+				<text class="font-icon">&#xe683;</text>
+				<text>订单管理</text>
+			</view>
+			
+			<view @click="isLogin('shop', '', '2')">
+				<text class="font-icon">&#xe684;</text>
+				<text>配送管理</text>
+			</view>
+			
+			
 		</view>
 		
 		
@@ -84,9 +126,9 @@
 <script>
 	import shopCartModel from '@/components/shop-cart-model.vue'
 	
-	
 	import {
-		mapMutations
+		mapMutations,
+		mapState
 	} from "vuex";
 	export default {
 		components: {
@@ -99,60 +141,145 @@
 				shopCartShow: false,
 				b_hint: '到底啦~',
 				dai_num: 0, //带付款商品数
-				// yi_num: 0,
-				// qx_num: 0,
 				pj_num: 0, //待评价商品数
 				userDetail: '', //用户信息
 				default_photo: require("@/static/icon/default.png"),
 				placeholder_photo: require("@/static/images/my-02.png"),
-				// placeholder_photo: require("@/static/images/my-red.png"),
 				df_num: 0, //待发货商品数
 				ds_num: 0, //待收货商品数
 				collect_num: 0, //收藏数
-				comm: require("@/static/images/commend.png"), //精品推荐标题图
-				// comm: require("@/static/images/commend-red.png"),
 				shopPath: '/api/scdsc',
-				shopObj: {
-					// "appid": this.$base.appid,
-					"m": this.$DEVELOPER.szblid,
-					"tk": this.$DEVELOPER.token,
-					"state": this.$base.getState(),
-					"gid": '',
-					"kw": '',
-					"status": 2,
-					"type": 1,
-					// "orderby": 3,
-					"cid": "001004",
-					// "psize":100,
-					"psize": 12,
-					"pnum": 1,
-					"rpflag": this.$DEVELOPER.cid,
-					// "areacode": this.$base.getQueryAreaCode(this.$areaMsg.id)
-				},
 				shopList: [],
 				user: null, //用户信息
 				balance: 0.00, //智慧卡余额
 				integral: 0,
-				loginFlag: false
+				loginFlag: false,
+				
+				roleList: [], // 权限列表
+				shopRoleShow: false,
+				delevePersonShow: false
 			};
 		},
+		
+		computed: {
+			...mapState({
+			    unit_data: state => state.zhsq.unit_data
+			})
+		},
+		
 		onLoad() {
 			
 		},
-		onReachBottom() {
-			
-		},
 		onShow() {
-			if (this.$userMsg.userid === null) {
-				this.loginFlag = false // 未登录
-			} else {
-				this.loginFlag = true // 已登录
-				this.getUserMsg()
-			}
+			uni.setNavigationBarTitle({
+				title: this.unit_data.name
+			})
 			
-			this.user = this.$userMsg.userid
+			let count = 0
+			let timer = setInterval(() => {
+				count++
+				if(this.$userMsg.userid === '') {
+					console.log('继续轮询查找')
+				} else if (this.$userMsg.userid !== '') {
+					
+					this.loginFlag = true // 已登录
+					this.fetchRole('15844995780021847546239') // 查询店铺权限
+					this.fetchRole('15844996086031044545059') // 查询配送员权限
+					this.getUserMsg()
+					
+					clearInterval(timer)
+				} else if (count > 60) {
+					clearInterval(timer)
+				}
+			}, 500)
+			
 		},
 		methods: {
+			// 解除配送员角色
+			delPersonDelive() {
+				uni.showLoading({
+					mask: true
+				})
+				
+				uni.showModal({
+					content: `确认解除与本店的配送员关系吗？`,
+					showCancel: true,
+					confirmColor: this.$PROP.hdsh_color,
+					success: res => {
+						if (res.confirm) {
+							this.$base.szblGet("/api/users/qbur", {
+								m: this.$userMsg.userid,
+								tk: this.$userMsg.token,
+								state: this.$base.getState(),
+								appid: this.$DEVELOPER.szblid,
+								g_ifdr: '0',
+								uid: this.$userMsg.userid,
+								rid: '15844996086031044545059',
+								oid: this.unit_data.id // 店铺ID
+							}).then(res => {
+								let r = this.$base.strResToJson(res.data)
+								
+								return this.$base.szblDel(
+									"/api/user/unr/" + r[0].id + 
+									'?m=' + this.$userMsg.userid +
+									'&tk=' + this.$userMsg.token +
+									'&state=' + this.$base.getState()
+								)
+							}).then(res => {
+								if(res.msg === '编辑成功!') {
+									uni.showToast({
+										title: '解除成功'
+									})
+								}
+								this.delevePersonShow = false
+								uni.hideLoading()
+							}).catch(err => {
+								console.log(err, '解除错误')
+								uni.hideLoading()
+							})
+						}
+						if (res.cancel) {
+							uni.hideLoading()
+							return
+						}
+					}
+				})
+			},
+			// 查询用户权限 来 显示管理按钮
+			fetchRole(rid) {
+				
+				this.$base.szblGet("/api/users/qbur", {
+					m: this.$userMsg.userid,
+					tk: this.$userMsg.token,
+					state: this.$base.getState(),
+					appid: this.$DEVELOPER.szblid,
+					g_ifdr: '0',
+					uid: this.$userMsg.userid,
+					rid: rid,
+					oid: this.unit_data.id // 店铺ID
+				}).then(res => {
+					let r = this.$base.strResToJson(res.data)
+					
+					if(rid === "15844995780021847546239" && r.length > 0) { // 店铺权限匹配
+						this.shopRoleShow = true
+					}  else if (rid === "15844996086031044545059" && r.length > 0) { // 配送员匹配
+						this.delevePersonShow = true
+					}
+					
+				}).catch(err => {
+					console.log(err ,'错误信息')
+				})
+			},
+			
+			toShop(status) {
+				uni.navigateTo({
+					url: `/pages/shopAdmin/index?status=${status}`,
+					success: res => {},
+					fail: () => {},
+					complete: () => {}
+				});
+			},
+			
 			toShopCart(){
 				if (this.$userMsg.userid == null) {
 					this.$store.commit('set_page_data', {
@@ -166,9 +293,6 @@
 					});
 					return false;
 				}else{
-					// uni.navigateTo({
-					// 	url: '/pages/shopping/shopCart/shopCart'
-					// })
 					uni.hideTabBar({
 						animation: true,
 						success: ()=> {
@@ -208,19 +332,24 @@
 				if (this.$userMsg.userid != null) {
 					if(mark == 'smartCard'){
 						this.toSmartCard()
-					}else if(mark == 'address'){
+					} else if (mark == 'address'){
 						this.toAddress()
-					}else if(mark == 'collect'){
+					} else if (mark == 'collect'){
 						this.toCollect()
-					}else if(mark == 'shopCart'){
+					} else if (mark == 'shopCart'){
 						this.toShopCart()
-					}else if(mark == 'coupon'){
+					} else if (mark == 'coupon'){
 						this.toCoupon()
-					}else if(mark == 'order'){
+					} else if (mark == 'order'){
 						this.toOrder(status)
-					}else if(mark == 'my'){
+					} else if (mark == 'my'){
 						this.toMy()
+					} else if (mark == 'shop') {
+						this.toShop(status)
+					} else if (mark == 'Delivery') {
+						this.toDelivery()
 					}
+					
 				} else {
 					this.$store.commit('set_page_data', {
 						page: '/pages/tabBar/member/member',
@@ -233,16 +362,24 @@
 					});
 				}
 			},
+			toDelivery() {
+				uni.navigateTo({
+					url: '/pages/shopAdmin/delivery',
+					success: res => {},
+					fail: () => {},
+					complete: () => {}
+				});
+			},
+			
 			// 到订单列表
 			toOrder(status) {
 				this.$store.commit('set_order_status', status)
 				uni.switchTab({
-					url: '/pages/order/orderList/orderList'
+					url: '/pages/tabBar/order/orderList/orderList'
 				});
 			},
 			// 到我的收货地址
 			toAddress() {
-				
 				uni.navigateTo({
 					url: '/pages/component/addressList/addressList',
 					success: res => {},
@@ -259,15 +396,7 @@
 					complete: () => {}
 				});
 			},
-			// 到购物车
-			// toShopCart(){
-			// 	uni.navigateTo({
-			// 		url: '/pages/shopping/shopCart/shopCart',
-			// 		success: res => {},
-			// 		fail: () => {},
-			// 		complete: () => {}
-			// 	});
-			// },
+
 			// 我的优惠券
 			toCoupon(){
 				uni.navigateTo({
@@ -277,59 +406,7 @@
 					complete: () => {}
 				});
 			},
-			// toAbout() {
-			// 	uni.navigateTo({
-			// 		url: '/pages/component/about/about',
-			// 		success: res => {},
-			// 		fail: () => {},
-			// 		complete: () => {}
-			// 	});
-			// },
-			// toSmartCard() {
-			// 	uni.navigateTo({
-			// 		url: '/pages/smartCard/wallet/wallet',
-			// 		success: res => {},
-			// 		fail: () => {},
-			// 		complete: () => {}
-			// 	});
-			// },
-			// 获取商品列表
-			getShop() {
-				this.$base.szblGet(this.shopPath, this.shopObj).then((res) => {
-					this.page_num = res.pages;
-					var shopList = this.$base.strResToJson(res.data);
-					for (var i = 0; i < shopList.length; i++) {
-						shopList[i].photo = this.$base.strResToJson(shopList[i].photo)
-						if (shopList[i].list.length != 0 && shopList[i].list[0].kw0 == 2) {
-							//减价活动
-							// var cheap = parseFloat(shopList[i].list[0].kw2);
-							var cheap = parseFloat(shopList[i].list[0].kw1);
-							var now_price = shopList[i].kw1 - cheap;
-							// now_price = Math.floor(now_price * 100) / 100;
-							now_price = this.$base.numberFormat(now_price, 2 , '.')
-							shopList[i].cheapen = cheap;
-							shopList[i].now_price = now_price;
-						}
-						if (shopList[i].list.length != 0 && shopList[i].list[0].kw0 == 1) {
-							//折扣活动
-							var rebate = parseFloat(shopList[i].list[0].kw1);
-							var now_price = shopList[i].kw1 * rebate / 10;
-							// now_price = Math.floor(now_price * 100) / 100;
-							now_price = this.$base.numberFormat(now_price, 2 , '.')
-							shopList[i].rebate = rebate;
-							shopList[i].now_price = now_price;
-						}
-						for (var j = 0; j < shopList[i].photo.length; j++) {
-							shopList[i].photo[j] = this.$base.urlPrex + shopList[i].photo[j]
-						}
-						this.shopList.push(shopList[i])
-					}
 
-					// this.shopList = shopList;
-				}).catch((msg) => {
-					console.log(msg)
-				})
-			},
 			// 登出
 			logout() {
 				uni.showModal({
@@ -353,11 +430,14 @@
 					}
 				})
 			},
+			
+			// 到个人信息修改页
 			toMy() {
 				uni.navigateTo({
 					url: '/pages/component/my/my',
 				});
 			},
+			
 			// 到商品详情
 			toShopDetail(x) {
 				uni.navigateTo({
@@ -507,7 +587,20 @@
 	    }
 	}
 	
+	.member .role-wrapper {
+		align-self: flex-end;
+		position: absolute;
+		top: 24upx;
+		right: 24upx;
+	}
 	
+	.member .role-wrapper .role-item {
+		border: 2upx solid #fff;
+		border-radius: 12upx;
+		padding: 0px 12upx;
+		text-align: center;
+		margin-bottom: 18upx;
+	}
 	
 	
 	.member-list li {
@@ -562,21 +655,36 @@
 	}
 
 	.kuai {
+		position: relative;
 		background: #fff;
 		padding: 0 4%;
 		margin-bottom: 16upx;
 	}
 	
+	.kuai h3.title {
+		width: 90%;
+		color: #222;
+		padding-bottom: 12upx;
+		padding-left: 4upx;
+		font-size: 32upx;
+		border-bottom: 2upx solid #eee;
+		margin: 0 auto;
+	}
+	
 	.kuai.icon {
 		display: flex;
-		justify-content: space-between;
-		padding: 20px 4%;
+		padding: 24upx 0upx;
+		flex-wrap: wrap;
+		/* justify-content: space-between; */
 	}
 	
 	.kuai.icon > view {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+		width: 25%;
+		margin-top: 32upx;
+		font-size: 26upx;
 	}
 	
 	.kuai.icon > view > .font-icon {

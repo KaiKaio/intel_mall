@@ -30,11 +30,13 @@
 
 <script>
 	import {
-		mapMutations
+		mapMutations,
+		mapState
 	} from "vuex"
 	export default {
 		data() {
 			return {
+				page_mark: '',
 				add_list: [],
 				address_mode: {
 					name: '', //收货人
@@ -43,13 +45,21 @@
 					city: '', //市
 					area: '', //区
 					address: '', //地址
-					isDefault: '', //是否默认地址      
-					page_mark: '',
+					isDefault: '', //是否默认地址
 				}
 			};
 		},
+		computed: {
+			...mapState({
+			    unit_data: state => state.zhsq.unit_data
+			})
+		},
 		onLoad(obj) {
 			this.page_mark = obj.m;
+			
+			uni.setNavigationBarTitle({
+				title: this.unit_data.name
+			})
 			// this.getAddreList()
 		},
 		onShow() {
@@ -60,16 +70,21 @@
 				this.$base.szblGet("/api/user/" + this.$userMsg.userid, {
 						m: this.$userMsg.userid,
 						tk: this.$userMsg.token,
-						state: this.$base.getState(),
+						state: this.$base.getState()
 					}).then((resData) => {
 					let res = this.$base.strResToJson(resData.data).address
 					if (res == "" || res == "[]" || res == null) {
 						this.add_list = []
 					} else {
-						this.add_list = res
+						this.add_list = []
+						for(let i = 0; i < res.length; i++) {
+							if(res[i].unit === this.unit_data.id) {
+								this.add_list.push(res[i])
+							}
+						}
+						// this.add_list = res
 					}
 					this.$store.commit('set_address_data', this.add_list)
-
 				}).catch((msg) => {
 					console.log(msg)
 				})
